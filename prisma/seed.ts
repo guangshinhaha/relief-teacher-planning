@@ -1,6 +1,8 @@
 import { PrismaClient, TeacherType } from "@prisma/client";
 
-const prisma = new PrismaClient({});
+const prisma = new PrismaClient({
+  datasources: { db: { url: process.env.DIRECT_URL } },
+});
 
 async function main() {
   // Clear existing data
@@ -11,31 +13,35 @@ async function main() {
   await prisma.period.deleteMany();
 
   // Create periods (typical school day)
-  const periods = await Promise.all(
-    [
-      { number: 1, startTime: "07:30", endTime: "08:20" },
-      { number: 2, startTime: "08:20", endTime: "09:10" },
-      { number: 3, startTime: "09:30", endTime: "10:20" },
-      { number: 4, startTime: "10:20", endTime: "11:10" },
-      { number: 5, startTime: "11:30", endTime: "12:20" },
-      { number: 6, startTime: "12:20", endTime: "13:10" },
-      { number: 7, startTime: "14:00", endTime: "14:50" },
-    ].map((p) => prisma.period.create({ data: p }))
-  );
+  const periodsData = [
+    { number: 1, startTime: "07:30", endTime: "08:20" },
+    { number: 2, startTime: "08:20", endTime: "09:10" },
+    { number: 3, startTime: "09:30", endTime: "10:20" },
+    { number: 4, startTime: "10:20", endTime: "11:10" },
+    { number: 5, startTime: "11:30", endTime: "12:20" },
+    { number: 6, startTime: "12:20", endTime: "13:10" },
+    { number: 7, startTime: "14:00", endTime: "14:50" },
+  ];
+  const periods = [];
+  for (const p of periodsData) {
+    periods.push(await prisma.period.create({ data: p }));
+  }
 
   // Create teachers
-  const teachers = await Promise.all(
-    [
-      { name: "Mr Tan Wei Ming", type: TeacherType.REGULAR },
-      { name: "Ms Lim Siew Hua", type: TeacherType.REGULAR },
-      { name: "Mr Ahmad bin Hassan", type: TeacherType.REGULAR },
-      { name: "Ms Priya Nair", type: TeacherType.REGULAR },
-      { name: "Mr David Chen", type: TeacherType.REGULAR },
-      { name: "Ms Sarah Wong", type: TeacherType.REGULAR },
-      { name: "Mr Kumar Rajan", type: TeacherType.PERMANENT_RELIEF },
-      { name: "Ms Fatimah bte Ali", type: TeacherType.PERMANENT_RELIEF },
-    ].map((t) => prisma.teacher.create({ data: t }))
-  );
+  const teachersData = [
+    { name: "Mr Tan Wei Ming", type: TeacherType.REGULAR },
+    { name: "Ms Lim Siew Hua", type: TeacherType.REGULAR },
+    { name: "Mr Ahmad bin Hassan", type: TeacherType.REGULAR },
+    { name: "Ms Priya Nair", type: TeacherType.REGULAR },
+    { name: "Mr David Chen", type: TeacherType.REGULAR },
+    { name: "Ms Sarah Wong", type: TeacherType.REGULAR },
+    { name: "Mr Kumar Rajan", type: TeacherType.PERMANENT_RELIEF },
+    { name: "Ms Fatimah bte Ali", type: TeacherType.PERMANENT_RELIEF },
+  ];
+  const teachers = [];
+  for (const t of teachersData) {
+    teachers.push(await prisma.teacher.create({ data: t }));
+  }
 
   const [tan, lim, ahmad, priya, david, sarah] = teachers;
 
@@ -93,19 +99,17 @@ async function main() {
     { teacher: sarah, day: 5, period: periods[3], className: "4A", subject: "Chinese" },
   ];
 
-  await Promise.all(
-    entries.map((e) =>
-      prisma.timetableEntry.create({
-        data: {
-          teacherId: e.teacher.id,
-          dayOfWeek: e.day,
-          periodId: e.period.id,
-          className: e.className,
-          subject: e.subject,
-        },
-      })
-    )
-  );
+  for (const e of entries) {
+    await prisma.timetableEntry.create({
+      data: {
+        teacherId: e.teacher.id,
+        dayOfWeek: e.day,
+        periodId: e.period.id,
+        className: e.className,
+        subject: e.subject,
+      },
+    });
+  }
 
   console.log("Seed complete:");
   console.log(`  ${periods.length} periods`);
