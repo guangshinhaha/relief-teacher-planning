@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Period = {
   id: string;
@@ -15,8 +14,7 @@ export default function SettingsClient({
 }: {
   initialPeriods: Period[];
 }) {
-  const router = useRouter();
-  const [periods] = useState(initialPeriods);
+  const [periods, setPeriods] = useState(initialPeriods);
   const [isAdding, setIsAdding] = useState(false);
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
@@ -42,8 +40,11 @@ export default function SettingsClient({
         return;
       }
 
+      const created = await res.json();
+      setPeriods((prev) =>
+        [...prev, created].sort((a, b) => a.number - b.number)
+      );
       form.reset();
-      router.refresh();
     } catch {
       alert("Failed to add period.");
     } finally {
@@ -52,14 +53,17 @@ export default function SettingsClient({
   }
 
   async function handleDelete(id: string) {
+    const prev = periods;
+    setPeriods((p) => p.filter((x) => x.id !== id));
+
     try {
       const res = await fetch(`/api/periods/${id}`, { method: "DELETE" });
       if (!res.ok) {
+        setPeriods(prev);
         alert("Failed to delete period.");
-        return;
       }
-      router.refresh();
     } catch {
+      setPeriods(prev);
       alert("Failed to delete period.");
     }
   }

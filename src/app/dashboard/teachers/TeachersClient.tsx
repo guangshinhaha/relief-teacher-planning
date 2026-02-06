@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Teacher = {
   id: string;
@@ -15,8 +14,7 @@ export default function TeachersClient({
 }: {
   initialTeachers: Teacher[];
 }) {
-  const router = useRouter();
-  const [teachers] = useState(initialTeachers);
+  const [teachers, setTeachers] = useState(initialTeachers);
   const [isAdding, setIsAdding] = useState(false);
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
@@ -41,8 +39,13 @@ export default function TeachersClient({
         return;
       }
 
+      const created = await res.json();
+      setTeachers((prev) =>
+        [...prev, { ...created, timetableCount: 0 }].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        )
+      );
       form.reset();
-      router.refresh();
     } catch {
       alert("Failed to add teacher.");
     } finally {
@@ -51,14 +54,17 @@ export default function TeachersClient({
   }
 
   async function handleDelete(id: string) {
+    const prev = teachers;
+    setTeachers((t) => t.filter((x) => x.id !== id));
+
     try {
       const res = await fetch(`/api/teachers/${id}`, { method: "DELETE" });
       if (!res.ok) {
+        setTeachers(prev);
         alert("Failed to delete teacher.");
-        return;
       }
-      router.refresh();
     } catch {
+      setTeachers(prev);
       alert("Failed to delete teacher.");
     }
   }

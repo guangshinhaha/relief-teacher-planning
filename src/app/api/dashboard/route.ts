@@ -53,41 +53,41 @@ export async function GET(request: NextRequest) {
 
   const sickTeacherIds = sickReports.map((sr) => sr.teacherId);
 
-  // Timetable entries for sick teachers on this day + matching week type (or ALL)
-  const sickTeacherEntries =
-    sickTeacherIds.length > 0
-      ? await prisma.timetableEntry.findMany({
-          where: {
-            teacherId: { in: sickTeacherIds },
-            dayOfWeek: timetableDayOfWeek,
-            weekType: { in: [currentWeekType, "ALL"] },
-          },
-          include: { period: true },
-          orderBy: { period: { number: "asc" } },
-        })
-      : [];
-
-  // All teachers for availability
-  const allTeachers = await prisma.teacher.findMany({
-    orderBy: { name: "asc" },
-  });
-
-  // All entries for this day + week type (who's busy)
-  const allEntriesForDay = await prisma.timetableEntry.findMany({
-    where: {
-      dayOfWeek: timetableDayOfWeek,
-      weekType: { in: [currentWeekType, "ALL"] },
-    },
-    select: { teacherId: true, periodId: true },
-  });
-
-  // Existing relief assignments for this date
-  const existingAssignments = await prisma.reliefAssignment.findMany({
-    where: { date: dateUTC },
-    include: {
-      timetableEntry: { select: { periodId: true } },
-    },
-  });
+  // Run remaining queries in parallel — they're all independent
+  const [sickTeacherEntries, allTeachers, allEntriesForDay, existingAssignments] =
+    await Promise.all([
+      // Timetable entries for sick teachers on this day + matching week type
+      sickTeacherIds.length > 0
+        ? prisma.timetableEntry.findMany({
+            where: {
+              teacherId: { in: sickTeacherIds },
+              dayOfWeek: timetableDayOfWeek,
+              weekType: { in: [currentWeekType, "ALL"] },
+            },
+            include: { period: true },
+            orderBy: { period: { number: "asc" } },
+          })
+        : Promise.resolve([]),
+      // All teachers for availability
+      prisma.teacher.findMany({
+        orderBy: { name: "asc" },
+      }),
+      // All entries for this day + week type (who's busy)
+      prisma.timetableEntry.findMany({
+        where: {
+          dayOfWeek: timetableDayOfWeek,
+          weekType: { in: [currentWeekType, "ALL"] },
+        },
+        select: { teacherId: true, periodId: true },
+      }),
+      // Existing relief assignments for this date
+      prisma.reliefAssignment.findMany({
+        where: { date: dateUTC },
+        include: {
+          timetableEntry: { select: { periodId: true } },
+        },
+      }),
+    ]);
 
   // Build lookups
   const teacherBusyPeriods = new Map<string, Set<string>>();

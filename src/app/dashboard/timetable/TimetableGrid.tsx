@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type Period = {
@@ -30,8 +30,8 @@ const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 export default function TimetableGrid({
   teachers,
-  periods,
-  entries,
+  periods: initialPeriods,
+  entries: initialEntries,
   selectedTeacherId,
   weekType,
 }: {
@@ -43,6 +43,8 @@ export default function TimetableGrid({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [localEntries, setLocalEntries] = useState(initialEntries);
+  const [localPeriods, setLocalPeriods] = useState(initialPeriods);
   const [editingCell, setEditingCell] = useState<{
     periodId: string;
     dayOfWeek: number;
@@ -57,9 +59,18 @@ export default function TimetableGrid({
   const [newPeriodStart, setNewPeriodStart] = useState("");
   const [newPeriodEnd, setNewPeriodEnd] = useState("");
 
+  // Sync local state when server props change (teacher/week switch)
+  useEffect(() => {
+    setLocalEntries(initialEntries);
+  }, [initialEntries]);
+
+  useEffect(() => {
+    setLocalPeriods(initialPeriods);
+  }, [initialPeriods]);
+
   // Build a lookup: entries by "periodId-dayOfWeek"
   const entryMap = new Map<string, TimetableEntry>();
-  for (const entry of entries) {
+  for (const entry of localEntries) {
     entryMap.set(`${entry.periodId}-${entry.dayOfWeek}`, entry);
   }
 
@@ -97,7 +108,7 @@ export default function TimetableGrid({
     if (!editingCell || !selectedTeacherId) return;
     setIsMutating(true);
     try {
-      await fetch("/api/timetable", {
+      const res = await fetch("/api/timetable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,20 +120,30 @@ export default function TimetableGrid({
           weekType,
         }),
       });
+      if (res.ok) {
+        const saved = await res.json();
+        setLocalEntries((prev) => {
+          const key = `${saved.periodId}-${saved.dayOfWeek}`;
+          const without = prev.filter(
+            (e) => `${e.periodId}-${e.dayOfWeek}` !== key
+          );
+          return [...without, saved];
+        });
+      }
       closeEditor();
-      router.refresh();
     } finally {
       setIsMutating(false);
     }
   }
 
   async function handleDelete(id: string) {
-    setIsMutating(true);
+    const prev = localEntries;
+    setLocalEntries((e) => e.filter((x) => x.id !== id));
     try {
-      await fetch(`/api/timetable/${id}`, { method: "DELETE" });
-      router.refresh();
-    } finally {
-      setIsMutating(false);
+      const res = await fetch(`/api/timetable/${id}`, { method: "DELETE" });
+      if (!res.ok) setLocalEntries(prev);
+    } catch {
+      setLocalEntries(prev);
     }
   }
 
@@ -131,7 +152,7 @@ export default function TimetableGrid({
     if (!num || !newPeriodStart.trim() || !newPeriodEnd.trim()) return;
     setIsMutating(true);
     try {
-      await fetch("/api/periods", {
+      const res = await fetch("/api/periods", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -140,11 +161,16 @@ export default function TimetableGrid({
           endTime: newPeriodEnd.trim(),
         }),
       });
+      if (res.ok) {
+        const created = await res.json();
+        setLocalPeriods((prev) =>
+          [...prev, created].sort((a, b) => a.number - b.number)
+        );
+      }
       setNewPeriodNumber("");
       setNewPeriodStart("");
       setNewPeriodEnd("");
       setShowPeriodForm(false);
-      router.refresh();
     } finally {
       setIsMutating(false);
     }
@@ -152,12 +178,19 @@ export default function TimetableGrid({
 
   async function handleDeletePeriod(periodId: string) {
     if (!confirm("Delete this period? All timetable entries for this period will also be removed.")) return;
-    setIsMutating(true);
+    const prevPeriods = localPeriods;
+    const prevEntries = localEntries;
+    setLocalPeriods((p) => p.filter((x) => x.id !== periodId));
+    setLocalEntries((e) => e.filter((x) => x.periodId !== periodId));
     try {
-      await fetch(`/api/periods/${periodId}`, { method: "DELETE" });
-      router.refresh();
-    } finally {
-      setIsMutating(false);
+      const res = await fetch(`/api/periods/${periodId}`, { method: "DELETE" });
+      if (!res.ok) {
+        setLocalPeriods(prevPeriods);
+        setLocalEntries(prevEntries);
+      }
+    } catch {
+      setLocalPeriods(prevPeriods);
+      setLocalEntries(prevEntries);
     }
   }
 
@@ -189,7 +222,7 @@ export default function TimetableGrid({
     );
   }
 
-  if (periods.length === 0) {
+  if (localPeriods.length === 0) {
     return (
       <div className="space-y-4">
         {/* Teacher selector (still shown so user can switch) */}
@@ -374,7 +407,7 @@ export default function TimetableGrid({
               </tr>
             </thead>
             <tbody>
-              {periods.map((period) => (
+              {localPeriods.map((period) => (
                 <tr key={period.id}>
                   {/* Period label with delete button */}
                   <td className="border-b border-r border-card-border px-4 py-3 last:border-b-0">
@@ -543,7 +576,7 @@ export default function TimetableGrid({
                     <button
                       onClick={() => {
                         setNewPeriodNumber(
-                          String((periods[periods.length - 1]?.number ?? 0) + 1)
+                          String((localPeriods[localPeriods.length - 1]?.number ?? 0) + 1)
                         );
                         setShowPeriodForm(true);
                       }}
