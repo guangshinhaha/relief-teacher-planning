@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TeacherType {
+  REGULAR
+  PERMANENT_RELIEF
+}
+
+model Teacher {
+  id        String      @id @default(cuid())
+  name      String
+  type      TeacherType @default(REGULAR)
+  createdAt DateTime    @default(now())
+
+  timetableEntries  TimetableEntry[]
+  sickReports       SickReport[]
+  reliefAssignments ReliefAssignment[]
+}
+
+model Period {
+  id        String @id @default(cuid())
+  number    Int    @unique
+  startTime String // e.g. "07:30"
+  endTime   String // e.g. "08:30"
+
+  timetableEntries TimetableEntry[]
+}
+
+model TimetableEntry {
+  id        String @id @default(cuid())
+  teacherId String
+  dayOfWeek Int // 1=Monday ... 5=Friday
+  periodId  String
+  className String // e.g. "3A"
+  subject   String // e.g. "Math"
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  period  Period  @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  reliefAssignments ReliefAssignment[]
+
+  @@unique([teacherId, dayOfWeek, periodId])
+}
+
+model SickReport {
+  id        String   @id @default(cuid())
+  teacherId String
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+
+  teacher           Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  reliefAssignments ReliefAssignment[]
+}
+
+model ReliefAssignment {
+  id               String   @id @default(cuid())
+  sickReportId     String
+  timetableEntryId String
+  reliefTeacherId  String
+  date             DateTime
+  createdAt        DateTime @default(now())
+
+  sickReport     SickReport     @relation(fields: [sickReportId], references: [id], onDelete: Cascade)
+  timetableEntry TimetableEntry @relation(fields: [timetableEntryId], references: [id], onDelete: Cascade)
+  reliefTeacher  Teacher        @relation(fields: [reliefTeacherId], references: [id], onDelete: Cascade)
+
+  @@unique([timetableEntryId, date])
+}
