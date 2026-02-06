@@ -13,8 +13,8 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Relief Teacher Planning",
-  description: "Manage relief teacher assignments when teachers report sick",
+  title: "StandIn — Relief Teacher Planning",
+  description: "Simplify relief teacher assignments when teachers report sick. One-click reporting, smart scheduling, real-time dashboard.",
 };
 
 export default function RootLayout({

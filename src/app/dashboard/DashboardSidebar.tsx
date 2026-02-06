@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   {
     label: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: (
       <svg
         className="h-5 w-5"
@@ -91,8 +91,8 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
 
   function isActive(href: string) {
-    if (href === "/") {
-      return pathname === "/";
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
     }
     return pathname.startsWith(href);
   }
@@ -117,7 +117,7 @@ export default function DashboardSidebar() {
           </svg>
         </div>
         <span className="font-display text-xl font-bold tracking-tight text-foreground">
-          Relief Planner
+          StandIn
         </span>
       </div>
 
@@ -152,7 +152,7 @@ export default function DashboardSidebar() {
 
       {/* Footer */}
       <div className="border-t border-card-border px-6 py-4">
-        <p className="text-xs text-muted">Relief Teacher Planning</p>
+        <p className="text-xs text-muted">StandIn</p>
         <p className="text-xs text-muted/60">v1.0.0</p>
       </div>
     </aside>

@@ -52,7 +52,7 @@ export async function submitSickReport(
       },
     });
 
-    revalidatePath("/");
+    revalidatePath("/report");
 
     return { success: true };
   } catch {
