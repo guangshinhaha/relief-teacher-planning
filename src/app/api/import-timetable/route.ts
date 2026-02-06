@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
   try {
     const result = await prisma.$transaction(async (tx) => {
       if (mode === "replace") {
-        // Delete in order that respects foreign keys (or rely on cascades)
         await tx.reliefAssignment.deleteMany();
         await tx.sickReport.deleteMany();
         await tx.timetableEntry.deleteMany();
@@ -73,7 +72,6 @@ export async function POST(request: NextRequest) {
           const created = await tx.teacher.create({ data: { name, type: "REGULAR" } });
           teacherRecords.set(name, created.id);
         } else {
-          // Try to find existing teacher by name
           let teacher = await tx.teacher.findFirst({ where: { name } });
           if (!teacher) {
             teacher = await tx.teacher.create({ data: { name, type: "REGULAR" } });
@@ -92,38 +90,57 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Create timetable entries
-      let entryCount = 0;
+      // Build timetable entry data, deduplicating by unique constraint
+      const seen = new Set<string>();
+      const entryData: {
+        teacherId: string;
+        dayOfWeek: number;
+        periodId: string;
+        className: string;
+        subject: string;
+        weekType: WeekType;
+      }[] = [];
+
       for (const entry of entries) {
         const teacherId = teacherRecords.get(entry.teacherName);
         const periodId = periodRecords.get(entry.periodNumber);
         if (!teacherId || !periodId) continue;
 
-        await tx.timetableEntry.create({
-          data: {
-            teacherId,
-            dayOfWeek: entry.dayOfWeek,
-            periodId,
-            className: entry.className,
-            subject: entry.subject,
-            weekType: entry.weekType as WeekType,
-          },
+        const key = `${teacherId}-${entry.dayOfWeek}-${periodId}-${entry.weekType}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        entryData.push({
+          teacherId,
+          dayOfWeek: entry.dayOfWeek,
+          periodId,
+          className: entry.className,
+          subject: entry.subject,
+          weekType: entry.weekType as WeekType,
         });
-        entryCount++;
+      }
+
+      // Bulk create in batches
+      const BATCH_SIZE = 500;
+      for (let i = 0; i < entryData.length; i += BATCH_SIZE) {
+        await tx.timetableEntry.createMany({
+          data: entryData.slice(i, i + BATCH_SIZE),
+        });
       }
 
       return {
         teachers: uniqueTeacherNames.length,
         periods: periods.length,
-        entries: entryCount,
+        entries: entryData.length,
       };
-    });
+    }, { timeout: 30000 });
 
     return NextResponse.json({ success: true, created: result });
   } catch (error) {
     console.error("Import failed:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Import failed. Please check your file and try again." },
+      { error: `Import failed: ${message}` },
       { status: 500 }
     );
   }
