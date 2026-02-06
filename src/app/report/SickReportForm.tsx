@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
-import { submitSickReport, type SickReportState } from "./actions";
+import { useState } from "react";
 
 type Teacher = {
   id: string;
@@ -13,14 +12,44 @@ export default function SickReportForm({
 }: {
   teachers: Teacher[];
 }) {
-  const [state, formAction, isPending] = useActionState<
-    SickReportState,
-    FormData
-  >(submitSickReport, null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [isPending, setIsPending] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
 
-  if (state?.success) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setIsPending(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const teacherId = formData.get("teacherId") as string;
+    const startDate = formData.get("startDate") as string;
+    const numberOfDays = parseInt(formData.get("numberOfDays") as string, 10);
+
+    try {
+      const res = await fetch("/api/sick-reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teacherId, startDate, numberOfDays }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Something went wrong.");
+      }
+
+      setSuccess(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsPending(false);
+    }
+  }
+
+  if (success) {
     return (
       <div className="rounded-2xl border border-success/20 bg-success-light p-8 text-center">
         <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
@@ -48,7 +77,10 @@ export default function SickReportForm({
         </p>
         <button
           type="button"
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            setSuccess(false);
+            setError(null);
+          }}
           className="inline-flex items-center gap-2 rounded-xl bg-success px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:shadow-md hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-success/50 focus:ring-offset-2 cursor-pointer"
         >
           <svg
@@ -72,13 +104,13 @@ export default function SickReportForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
-      {state?.error && (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
         <div
           role="alert"
           className="rounded-xl border border-danger/20 bg-danger-light px-4 py-3 text-danger text-sm font-medium"
         >
-          {state.error}
+          {error}
         </div>
       )}
 

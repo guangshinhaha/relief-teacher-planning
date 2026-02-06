@@ -13,6 +13,12 @@ enum TeacherType {
   PERMANENT_RELIEF
 }
 
+enum WeekType {
+  ALL  // same every week
+  ODD
+  EVEN
+}
+
 model Teacher {
   id        String      @id @default(cuid())
   name      String
@@ -34,19 +40,20 @@ model Period {
 }
 
 model TimetableEntry {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   teacherId String
-  dayOfWeek Int // 1=Monday ... 5=Friday
+  dayOfWeek Int      // 1=Monday ... 5=Friday
   periodId  String
-  className String // e.g. "3A"
-  subject   String // e.g. "Math"
+  className String   // e.g. "3A"
+  subject   String   // e.g. "Math"
+  weekType  WeekType @default(ALL)
 
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   period  Period  @relation(fields: [periodId], references: [id], onDelete: Cascade)
 
   reliefAssignments ReliefAssignment[]
 
-  @@unique([teacherId, dayOfWeek, periodId])
+  @@unique([teacherId, dayOfWeek, periodId, weekType])
 }
 
 model SickReport {

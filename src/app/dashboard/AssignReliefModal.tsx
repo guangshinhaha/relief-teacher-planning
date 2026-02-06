@@ -1,7 +1,6 @@
 "use client";
 
-import { useRef, useTransition } from "react";
-import { assignRelief } from "./actions";
+import { useRef, useState } from "react";
 
 type AvailableTeacher = {
   id: string;
@@ -12,6 +11,7 @@ type AvailableTeacher = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
   periodNumber: number;
   periodStartTime: string;
   periodEndTime: string;
@@ -27,6 +27,7 @@ type Props = {
 export default function AssignReliefModal({
   isOpen,
   onClose,
+  onSuccess,
   periodNumber,
   periodStartTime,
   periodEndTime,
@@ -38,25 +39,46 @@ export default function AssignReliefModal({
   date,
   availableTeachers,
 }: Props) {
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   if (!isOpen) return null;
 
-  function handleSubmit(formData: FormData) {
-    formData.set("sickReportId", sickReportId);
-    formData.set("timetableEntryId", timetableEntryId);
-    formData.set("date", date);
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const reliefTeacherId = formData.get("reliefTeacherId") as string;
 
-    startTransition(async () => {
-      try {
-        await assignRelief(formData);
-        onClose();
-      } catch {
-        // Error handling could be enhanced with toast notifications
-        alert("Failed to assign relief teacher. They may already be assigned elsewhere.");
+    if (!reliefTeacherId) return;
+
+    setIsPending(true);
+    try {
+      const res = await fetch("/api/relief-assignments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sickReportId,
+          timetableEntryId,
+          reliefTeacherId,
+          date,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || "Failed to assign relief teacher.");
       }
-    });
+
+      onSuccess();
+    } catch (err) {
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Failed to assign relief teacher. They may already be assigned elsewhere."
+      );
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -97,7 +119,7 @@ export default function AssignReliefModal({
         </div>
 
         {/* Teacher selection */}
-        <form ref={formRef} action={handleSubmit} className="px-6 py-5">
+        <form ref={formRef} onSubmit={handleSubmit} className="px-6 py-5">
           <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted">
             Select Available Teacher
           </label>

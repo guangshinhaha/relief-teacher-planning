@@ -1,16 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import AssignReliefModal from "./AssignReliefModal";
-import { unassignRelief } from "./actions";
-
-type Period = {
-  id: string;
-  number: number;
-  startTime: string;
-  endTime: string;
-};
 
 type AvailableTeacher = {
   id: string;
@@ -39,36 +31,28 @@ type SickTeacherCard = {
   periods: PeriodSlot[];
 };
 
-type Props = {
+type DashboardData = {
   date: string;
-  dayLabel: string;
   isWeekend: boolean;
+  weekType: "ODD" | "EVEN" | null;
   sickTeachers: SickTeacherCard[];
   totalUncovered: number;
   totalCovered: number;
-  totalSickTeachers: number;
 };
 
-const DAY_NAMES: Record<number, string> = {
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
+type Props = {
+  date: string;
+  dayLabel: string;
+  weekType: "ODD" | "EVEN";
 };
 
-export default function DashboardContent({
-  date,
-  dayLabel,
-  isWeekend,
-  sickTeachers,
-  totalUncovered,
-  totalCovered,
-  totalSickTeachers,
-}: Props) {
+export default function DashboardContent({ date, dayLabel, weekType }: Props) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [isUnassigning, startUnassign] = useTransition();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [weekOverride, setWeekOverride] = useState<"ODD" | "EVEN" | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUnassigning, setIsUnassigning] = useState(false);
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -82,10 +66,40 @@ export default function DashboardContent({
     sickReportId: "",
   });
 
+  const effectiveWeekType = weekOverride ?? weekType;
+
+  // Determine if weekend from the date string
+  const jsDay = new Date(date + "T00:00:00").getDay();
+  const isWeekend = jsDay === 0 || jsDay === 6;
+
+  const fetchDashboard = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/dashboard?date=${date}&weekType=${effectiveWeekType}`
+      );
+      if (!res.ok) throw new Error("Failed to fetch dashboard data");
+      const json: DashboardData = await res.json();
+      setData(json);
+    } catch {
+      setData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [date, effectiveWeekType]);
+
+  useEffect(() => {
+    // Reset week override when date changes
+    setWeekOverride(null);
+  }, [date]);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
   function handleDateChange(newDate: string) {
-    startTransition(() => {
-      router.push(`/dashboard?date=${newDate}`);
-    });
+    setIsNavigating(true);
+    router.push(`/dashboard?date=${newDate}`);
   }
 
   function navigateDay(offset: number) {
@@ -95,6 +109,13 @@ export default function DashboardContent({
     const mm = String(current.getMonth() + 1).padStart(2, "0");
     const dd = String(current.getDate()).padStart(2, "0");
     handleDateChange(`${yyyy}-${mm}-${dd}`);
+  }
+
+  function toggleWeekType() {
+    setWeekOverride((prev) => {
+      const current = prev ?? weekType;
+      return current === "ODD" ? "EVEN" : "ODD";
+    });
   }
 
   function openAssignModal(card: SickTeacherCard, slot: PeriodSlot) {
@@ -115,14 +136,24 @@ export default function DashboardContent({
     });
   }
 
-  function handleUnassign(assignmentId: string) {
-    startUnassign(async () => {
-      try {
-        await unassignRelief(assignmentId);
-      } catch {
-        alert("Failed to remove assignment.");
-      }
-    });
+  async function handleUnassign(assignmentId: string) {
+    setIsUnassigning(true);
+    try {
+      const res = await fetch(`/api/relief-assignments/${assignmentId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to remove assignment");
+      await fetchDashboard();
+    } catch {
+      alert("Failed to remove assignment.");
+    } finally {
+      setIsUnassigning(false);
+    }
+  }
+
+  async function handleAssignSuccess() {
+    closeModal();
+    await fetchDashboard();
   }
 
   // Format date for display
@@ -134,6 +165,12 @@ export default function DashboardContent({
     year: "numeric",
   });
 
+  // Use fetched data or fallback values
+  const sickTeachers = data?.sickTeachers ?? [];
+  const totalUncovered = data?.totalUncovered ?? 0;
+  const totalCovered = data?.totalCovered ?? 0;
+  const totalSickTeachers = sickTeachers.length;
+
   return (
     <div>
       {/* Date navigation */}
@@ -141,7 +178,7 @@ export default function DashboardContent({
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigateDay(-1)}
-            disabled={isPending}
+            disabled={isNavigating}
             className="flex h-10 w-10 items-center justify-center rounded-lg border border-card-border bg-card text-muted transition-colors hover:bg-accent-light hover:text-accent disabled:opacity-50"
             title="Previous day"
           >
@@ -169,7 +206,7 @@ export default function DashboardContent({
 
           <button
             onClick={() => navigateDay(1)}
-            disabled={isPending}
+            disabled={isNavigating}
             className="flex h-10 w-10 items-center justify-center rounded-lg border border-card-border bg-card text-muted transition-colors hover:bg-accent-light hover:text-accent disabled:opacity-50"
             title="Next day"
           >
@@ -197,7 +234,7 @@ export default function DashboardContent({
             const dd = String(today.getDate()).padStart(2, "0");
             handleDateChange(`${yyyy}-${mm}-${dd}`);
           }}
-          disabled={isPending}
+          disabled={isNavigating}
           className="h-10 rounded-lg border border-card-border bg-card px-4 text-sm font-medium text-muted transition-colors hover:bg-accent-light hover:text-accent disabled:opacity-50"
         >
           Today
@@ -205,7 +242,37 @@ export default function DashboardContent({
 
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted">{formattedDate}</span>
-          {isPending && (
+
+          {/* Week type badge */}
+          {!isWeekend && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-light px-2.5 py-1 text-xs font-semibold text-accent">
+              {effectiveWeekType === "ODD" ? "Odd Week" : "Even Week"}
+              {weekOverride && (
+                <span className="text-[10px] font-normal opacity-70">(manual)</span>
+              )}
+              <button
+                onClick={toggleWeekType}
+                className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full transition-colors hover:bg-accent/10"
+                title="Toggle week type"
+              >
+                <svg
+                  className="h-3 w-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"
+                  />
+                </svg>
+              </button>
+            </span>
+          )}
+
+          {(isNavigating || isLoading) && (
             <span className="text-xs text-muted">Loading...</span>
           )}
         </div>
@@ -266,8 +333,15 @@ export default function DashboardContent({
             </div>
           </div>
 
+          {/* Loading skeleton */}
+          {isLoading && !data && (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-card-border bg-card px-6 py-16 text-center shadow-sm">
+              <p className="text-sm text-muted">Loading dashboard data...</p>
+            </div>
+          )}
+
           {/* Sick teacher cards */}
-          {sickTeachers.length === 0 && (
+          {!isLoading && sickTeachers.length === 0 && (
             <div className="flex flex-col items-center justify-center rounded-xl border border-card-border bg-card px-6 py-16 text-center shadow-sm">
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-light">
                 <svg
@@ -446,6 +520,7 @@ export default function DashboardContent({
         <AssignReliefModal
           isOpen={modalState.isOpen}
           onClose={closeModal}
+          onSuccess={handleAssignSuccess}
           periodNumber={modalState.periodSlot.periodNumber}
           periodStartTime={modalState.periodSlot.periodStartTime}
           periodEndTime={modalState.periodSlot.periodEndTime}

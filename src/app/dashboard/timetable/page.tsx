@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getWeekType } from "@/lib/weekType";
 import TimetableGrid from "./TimetableGrid";
 
 export const dynamic = "force-dynamic";
@@ -6,9 +7,15 @@ export const dynamic = "force-dynamic";
 export default async function TimetablePage({
   searchParams,
 }: {
-  searchParams: Promise<{ teacherId?: string }>;
+  searchParams: Promise<{ teacherId?: string; weekType?: string }>;
 }) {
-  const { teacherId } = await searchParams;
+  const { teacherId, weekType } = await searchParams;
+
+  // Determine the selected week type, defaulting based on current ISO week
+  const selectedWeekType: "ODD" | "EVEN" =
+    weekType === "ODD" || weekType === "EVEN"
+      ? weekType
+      : getWeekType(new Date());
 
   const [teachers, periods] = await Promise.all([
     prisma.teacher.findMany({
@@ -22,10 +29,13 @@ export default async function TimetablePage({
   // Use provided teacherId or fall back to the first teacher
   const selectedTeacherId = teacherId ?? teachers[0]?.id ?? null;
 
-  // Fetch timetable entries for selected teacher
+  // Fetch timetable entries for selected teacher, filtered by weekType
   const entries = selectedTeacherId
     ? await prisma.timetableEntry.findMany({
-        where: { teacherId: selectedTeacherId },
+        where: {
+          teacherId: selectedTeacherId,
+          weekType: selectedWeekType,
+        },
         include: { period: true },
       })
     : [];
@@ -51,6 +61,7 @@ export default async function TimetablePage({
         periods={periods}
         entries={entries}
         selectedTeacherId={selectedTeacherId}
+        weekType={selectedWeekType}
       />
     </div>
   );
