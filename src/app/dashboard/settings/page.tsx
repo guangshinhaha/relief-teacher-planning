@@ -16,7 +16,7 @@ export default async function SettingsPage() {
           Settings
         </h1>
         <p className="mt-1 text-sm text-muted">
-          Configure school periods and their time slots.
+          Configure school periods and import timetable data.
         </p>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImportTimetableTab from "./ImportTimetableTab";
 
 type Period = {
   id: string;
@@ -16,6 +17,7 @@ export default function SettingsClient({
 }) {
   const [periods, setPeriods] = useState(initialPeriods);
   const [isAdding, setIsAdding] = useState(false);
+  const [activeTab, setActiveTab] = useState<"periods" | "import">("periods");
 
   async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -70,7 +72,33 @@ export default function SettingsClient({
 
   return (
     <>
-      {/* Add period form */}
+      {/* Tab bar */}
+      <div className="mb-6 flex gap-1 rounded-lg border border-card-border bg-card p-1">
+        <button
+          onClick={() => setActiveTab("periods")}
+          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "periods"
+              ? "bg-accent text-white shadow-sm"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Periods
+        </button>
+        <button
+          onClick={() => setActiveTab("import")}
+          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "import"
+              ? "bg-accent text-white shadow-sm"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          Import Timetable
+        </button>
+      </div>
+
+      {activeTab === "periods" && (
+        <>
+          {/* Add period form */}
       <div className="mb-8 rounded-xl border border-card-border bg-card p-6 shadow-sm">
         <h2 className="font-display text-lg font-semibold text-foreground">
           Add New Period
@@ -219,6 +247,10 @@ export default function SettingsClient({
           </div>
         )}
       </div>
+        </>
+      )}
+
+      {activeTab === "import" && <ImportTimetableTab />}
     </>
   );
 }
