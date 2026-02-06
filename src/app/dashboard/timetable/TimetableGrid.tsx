@@ -30,7 +30,7 @@ const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 export default function TimetableGrid({
   teachers,
-  periods: initialPeriods,
+  periods,
   entries: initialEntries,
   selectedTeacherId,
   weekType,
@@ -44,7 +44,6 @@ export default function TimetableGrid({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [localEntries, setLocalEntries] = useState(initialEntries);
-  const [localPeriods, setLocalPeriods] = useState(initialPeriods);
   const [editingCell, setEditingCell] = useState<{
     periodId: string;
     dayOfWeek: number;
@@ -53,20 +52,10 @@ export default function TimetableGrid({
   const [formSubject, setFormSubject] = useState("");
   const [isMutating, setIsMutating] = useState(false);
 
-  // Period management state
-  const [showPeriodForm, setShowPeriodForm] = useState(false);
-  const [newPeriodNumber, setNewPeriodNumber] = useState("");
-  const [newPeriodStart, setNewPeriodStart] = useState("");
-  const [newPeriodEnd, setNewPeriodEnd] = useState("");
-
   // Sync local state when server props change (teacher/week switch)
   useEffect(() => {
     setLocalEntries(initialEntries);
   }, [initialEntries]);
-
-  useEffect(() => {
-    setLocalPeriods(initialPeriods);
-  }, [initialPeriods]);
 
   // Build a lookup: entries by "periodId-dayOfWeek"
   const entryMap = new Map<string, TimetableEntry>();
@@ -147,53 +136,6 @@ export default function TimetableGrid({
     }
   }
 
-  async function handleAddPeriod() {
-    const num = parseInt(newPeriodNumber, 10);
-    if (!num || !newPeriodStart.trim() || !newPeriodEnd.trim()) return;
-    setIsMutating(true);
-    try {
-      const res = await fetch("/api/periods", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          number: num,
-          startTime: newPeriodStart.trim(),
-          endTime: newPeriodEnd.trim(),
-        }),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        setLocalPeriods((prev) =>
-          [...prev, created].sort((a, b) => a.number - b.number)
-        );
-      }
-      setNewPeriodNumber("");
-      setNewPeriodStart("");
-      setNewPeriodEnd("");
-      setShowPeriodForm(false);
-    } finally {
-      setIsMutating(false);
-    }
-  }
-
-  async function handleDeletePeriod(periodId: string) {
-    if (!confirm("Delete this period? All timetable entries for this period will also be removed.")) return;
-    const prevPeriods = localPeriods;
-    const prevEntries = localEntries;
-    setLocalPeriods((p) => p.filter((x) => x.id !== periodId));
-    setLocalEntries((e) => e.filter((x) => x.periodId !== periodId));
-    try {
-      const res = await fetch(`/api/periods/${periodId}`, { method: "DELETE" });
-      if (!res.ok) {
-        setLocalPeriods(prevPeriods);
-        setLocalEntries(prevEntries);
-      }
-    } catch {
-      setLocalPeriods(prevPeriods);
-      setLocalEntries(prevEntries);
-    }
-  }
-
   if (teachers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-card-border bg-card px-6 py-16 text-center shadow-sm">
@@ -222,7 +164,7 @@ export default function TimetableGrid({
     );
   }
 
-  if (localPeriods.length === 0) {
+  if (periods.length === 0) {
     return (
       <div className="space-y-4">
         {/* Teacher selector (still shown so user can switch) */}
@@ -267,68 +209,13 @@ export default function TimetableGrid({
           <p className="text-sm font-medium text-foreground">
             No periods configured
           </p>
-          <p className="mt-1 mb-4 text-xs text-muted">
-            Add your first period to get started.
+          <p className="mt-1 text-xs text-muted">
+            Configure periods in the{" "}
+            <a href="/dashboard/settings" className="font-medium text-accent hover:underline">
+              Settings
+            </a>{" "}
+            page first.
           </p>
-          {/* Inline add period form for empty state */}
-          {!showPeriodForm ? (
-            <button
-              onClick={() => setShowPeriodForm(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Add Period
-            </button>
-          ) : (
-            <div className="flex items-end gap-2">
-              <div>
-                <label className="mb-1 block text-left text-xs font-medium text-muted">Period #</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={newPeriodNumber}
-                  onChange={(e) => setNewPeriodNumber(e.target.value)}
-                  placeholder="1"
-                  className="h-9 w-16 rounded-lg border border-card-border bg-background px-2 text-center text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-left text-xs font-medium text-muted">Start</label>
-                <input
-                  type="text"
-                  value={newPeriodStart}
-                  onChange={(e) => setNewPeriodStart(e.target.value)}
-                  placeholder="08:30"
-                  className="h-9 w-20 rounded-lg border border-card-border bg-background px-2 text-center text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-left text-xs font-medium text-muted">End</label>
-                <input
-                  type="text"
-                  value={newPeriodEnd}
-                  onChange={(e) => setNewPeriodEnd(e.target.value)}
-                  placeholder="09:15"
-                  className="h-9 w-20 rounded-lg border border-card-border bg-background px-2 text-center text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-              <button
-                onClick={handleAddPeriod}
-                disabled={isMutating || !newPeriodNumber || !newPeriodStart.trim() || !newPeriodEnd.trim()}
-                className="h-9 rounded-lg bg-accent px-3 text-sm font-medium text-white transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setShowPeriodForm(false)}
-                className="h-9 rounded-lg border border-card-border bg-background px-3 text-sm font-medium text-muted transition-colors hover:text-foreground"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -407,11 +294,11 @@ export default function TimetableGrid({
               </tr>
             </thead>
             <tbody>
-              {localPeriods.map((period) => (
+              {periods.map((period) => (
                 <tr key={period.id}>
                   {/* Period label with delete button */}
                   <td className="border-b border-r border-card-border px-4 py-3 last:border-b-0">
-                    <div className="group flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-light font-display text-xs font-bold text-accent">
                         {period.number}
                       </span>
@@ -420,25 +307,6 @@ export default function TimetableGrid({
                         <br />
                         {period.endTime}
                       </div>
-                      <button
-                        onClick={() => handleDeletePeriod(period.id)}
-                        className="ml-auto hidden rounded p-1 text-danger opacity-0 transition-all hover:bg-danger-light group-hover:block group-hover:opacity-100"
-                        title="Delete period"
-                      >
-                        <svg
-                          className="h-3.5 w-3.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2}
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                          />
-                        </svg>
-                      </button>
                     </div>
                   </td>
 
@@ -566,82 +434,6 @@ export default function TimetableGrid({
                 </tr>
               ))}
 
-              {/* Add Period row */}
-              <tr>
-                <td
-                  colSpan={6}
-                  className="border-t border-card-border px-4 py-2"
-                >
-                  {!showPeriodForm ? (
-                    <button
-                      onClick={() => {
-                        setNewPeriodNumber(
-                          String((localPeriods[localPeriods.length - 1]?.number ?? 0) + 1)
-                        );
-                        setShowPeriodForm(true);
-                      }}
-                      className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-card-border py-2 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-accent"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
-                      Add Period
-                    </button>
-                  ) : (
-                    <div className="flex items-end gap-2 py-1">
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-muted">Period #</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={newPeriodNumber}
-                          onChange={(e) => setNewPeriodNumber(e.target.value)}
-                          placeholder="1"
-                          className="h-9 w-16 rounded-lg border border-card-border bg-background px-2 text-center text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-muted">Start Time</label>
-                        <input
-                          type="text"
-                          value={newPeriodStart}
-                          onChange={(e) => setNewPeriodStart(e.target.value)}
-                          placeholder="08:30"
-                          className="h-9 w-20 rounded-lg border border-card-border bg-background px-2 text-center text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-xs font-medium text-muted">End Time</label>
-                        <input
-                          type="text"
-                          value={newPeriodEnd}
-                          onChange={(e) => setNewPeriodEnd(e.target.value)}
-                          placeholder="09:15"
-                          className="h-9 w-20 rounded-lg border border-card-border bg-background px-2 text-center text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-                        />
-                      </div>
-                      <button
-                        onClick={handleAddPeriod}
-                        disabled={isMutating || !newPeriodNumber || !newPeriodStart.trim() || !newPeriodEnd.trim()}
-                        className="h-9 rounded-lg bg-accent px-3 text-sm font-medium text-white transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {isMutating ? "Adding..." : "Add"}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowPeriodForm(false);
-                          setNewPeriodNumber("");
-                          setNewPeriodStart("");
-                          setNewPeriodEnd("");
-                        }}
-                        className="h-9 rounded-lg border border-card-border bg-background px-3 text-sm font-medium text-muted transition-colors hover:text-foreground"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
