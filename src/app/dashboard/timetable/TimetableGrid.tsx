@@ -53,6 +53,8 @@ export default function TimetableGrid({
   const [formClassName, setFormClassName] = useState("");
   const [formSubject, setFormSubject] = useState("");
   const [isMutating, setIsMutating] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showEditConfirm, setShowEditConfirm] = useState(false);
 
   // Sync local state when server props change (teacher/week switch)
   useEffect(() => {
@@ -272,11 +274,90 @@ export default function TimetableGrid({
             </div>
           )}
 
+          {/* Edit mode toggle */}
+          {isEditMode ? (
+            <button
+              onClick={() => {
+                setIsEditMode(false);
+                closeEditor();
+              }}
+              className="ml-auto flex items-center gap-2 rounded-lg border border-card-border bg-background px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Done Editing
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowEditConfirm(true)}
+              className={`flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark ${hasWeekRotation ? "" : "ml-auto"}`}
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                />
+              </svg>
+              Edit Timetable
+            </button>
+          )}
+
           {isPending && (
             <span className="text-xs text-muted">Loading...</span>
           )}
         </div>
       </div>
+
+      {/* Edit confirmation modal */}
+      {showEditConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl border border-card-border bg-card p-6 shadow-lg">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-warning-light">
+              <svg
+                className="h-6 w-6 text-warning"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                />
+              </svg>
+            </div>
+            <h3 className="font-display text-lg font-semibold text-foreground">
+              Edit Timetable?
+            </h3>
+            <p className="mt-2 text-sm text-muted">
+              This will allow you to add, edit, and delete timetable entries manually. Be careful if you&apos;ve imported a timetable — changes cannot be undone.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowEditConfirm(false)}
+                className="flex-1 rounded-lg border border-card-border bg-background px-4 py-2.5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowEditConfirm(false);
+                  setIsEditMode(true);
+                }}
+                className="flex-1 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
+              >
+                Enable Editing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Timetable grid */}
       <div className="overflow-hidden rounded-xl border border-card-border bg-card shadow-sm">
@@ -328,8 +409,8 @@ export default function TimetableGrid({
                         key={dayOfWeek}
                         className="relative border-b border-r border-card-border last:border-r-0"
                       >
-                        {isEditing ? (
-                          /* Inline edit form */
+                        {isEditMode && isEditing ? (
+                          /* Inline edit form (edit mode only) */
                           <div className="p-2">
                             <div className="space-y-2">
                               <input
@@ -375,10 +456,8 @@ export default function TimetableGrid({
                         ) : entry ? (
                           /* Filled cell */
                           <div
-                            className="group cursor-pointer p-3 transition-colors hover:bg-accent-light/30"
-                            onClick={() =>
-                              openEditor(period.id, dayOfWeek)
-                            }
+                            className={`p-3 ${isEditMode ? "group cursor-pointer transition-colors hover:bg-accent-light/30" : ""}`}
+                            onClick={isEditMode ? () => openEditor(period.id, dayOfWeek) : undefined}
                           >
                             <p className="text-sm font-semibold text-foreground">
                               {entry.className}
@@ -386,50 +465,52 @@ export default function TimetableGrid({
                             <p className="text-xs text-muted">
                               {entry.subject}
                             </p>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(entry.id);
-                              }}
-                              className="absolute right-1.5 top-1.5 hidden rounded p-1 text-danger opacity-0 transition-all hover:bg-danger-light group-hover:block group-hover:opacity-100"
-                              title="Delete entry"
-                            >
+                            {isEditMode && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(entry.id);
+                                }}
+                                className="absolute right-1.5 top-1.5 hidden rounded p-1 text-danger opacity-0 transition-all hover:bg-danger-light group-hover:block group-hover:opacity-100"
+                                title="Delete entry"
+                              >
+                                <svg
+                                  className="h-3.5 w-3.5"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={2}
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6 18L18 6M6 6l12 12"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          /* Empty cell */
+                          <div
+                            className={`flex min-h-[64px] items-center justify-center p-3 ${isEditMode ? "cursor-pointer text-muted/30 transition-colors hover:bg-accent-light/20 hover:text-accent" : ""}`}
+                            onClick={isEditMode ? () => openEditor(period.id, dayOfWeek) : undefined}
+                          >
+                            {isEditMode && (
                               <svg
-                                className="h-3.5 w-3.5"
+                                className="h-5 w-5"
                                 fill="none"
                                 viewBox="0 0 24 24"
-                                strokeWidth={2}
+                                strokeWidth={1.5}
                                 stroke="currentColor"
                               >
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                                  d="M6 18L18 6M6 6l12 12"
+                                  d="M12 4.5v15m7.5-7.5h-15"
                                 />
                               </svg>
-                            </button>
-                          </div>
-                        ) : (
-                          /* Empty cell */
-                          <div
-                            className="flex min-h-[64px] cursor-pointer items-center justify-center p-3 text-muted/30 transition-colors hover:bg-accent-light/20 hover:text-accent"
-                            onClick={() =>
-                              openEditor(period.id, dayOfWeek)
-                            }
-                          >
-                            <svg
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M12 4.5v15m7.5-7.5h-15"
-                              />
-                            </svg>
+                            )}
                           </div>
                         )}
                       </td>
@@ -443,33 +524,35 @@ export default function TimetableGrid({
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 flex items-center gap-6 text-xs text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded border border-card-border bg-card"></span>
-          Click empty cell to add
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded bg-accent-light"></span>
-          Click filled cell to edit
-        </span>
-        <span className="flex items-center gap-1.5">
-          <svg
-            className="h-3 w-3 text-danger"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-          Hover to reveal delete
-        </span>
-      </div>
+      {/* Legend (edit mode only) */}
+      {isEditMode && (
+        <div className="mt-4 flex items-center gap-6 text-xs text-muted">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded border border-card-border bg-card"></span>
+            Click empty cell to add
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3 w-3 rounded bg-accent-light"></span>
+            Click filled cell to edit
+          </span>
+          <span className="flex items-center gap-1.5">
+            <svg
+              className="h-3 w-3 text-danger"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+            Hover to reveal delete
+          </span>
+        </div>
+      )}
     </div>
   );
 }

@@ -104,7 +104,7 @@ export default function DashboardSidebar() {
         <img
           src="/stand-in-logo.svg"
           alt="StandIn"
-          className="h-9 w-9"
+          className="h-10 w-auto"
         />
         <span className="font-display text-xl font-bold tracking-tight text-foreground">
           StandIn
