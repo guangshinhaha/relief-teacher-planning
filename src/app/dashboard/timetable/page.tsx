@@ -34,7 +34,7 @@ export default async function TimetablePage({
     ? await prisma.timetableEntry.findMany({
         where: {
           teacherId: selectedTeacherId,
-          weekType: selectedWeekType,
+          weekType: { in: [selectedWeekType, "ALL"] },
         },
         include: { period: true },
       })
