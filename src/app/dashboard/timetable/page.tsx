@@ -17,14 +17,20 @@ export default async function TimetablePage({
       ? weekType
       : getWeekType(new Date());
 
-  const [teachers, periods] = await Promise.all([
+  const [teachers, periods, rotationEntry] = await Promise.all([
     prisma.teacher.findMany({
       orderBy: { name: "asc" },
     }),
     prisma.period.findMany({
       orderBy: { number: "asc" },
     }),
+    prisma.timetableEntry.findFirst({
+      where: { weekType: { in: ["ODD", "EVEN"] } },
+      select: { id: true },
+    }),
   ]);
+
+  const hasWeekRotation = !!rotationEntry;
 
   // Use provided teacherId or fall back to the first teacher
   const selectedTeacherId = teacherId ?? teachers[0]?.id ?? null;
@@ -62,6 +68,7 @@ export default async function TimetablePage({
         entries={entries}
         selectedTeacherId={selectedTeacherId}
         weekType={selectedWeekType}
+        hasWeekRotation={hasWeekRotation}
       />
     </div>
   );

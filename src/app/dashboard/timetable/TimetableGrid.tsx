@@ -34,12 +34,14 @@ export default function TimetableGrid({
   entries: initialEntries,
   selectedTeacherId,
   weekType,
+  hasWeekRotation,
 }: {
   teachers: Teacher[];
   periods: Period[];
   entries: TimetableEntry[];
   selectedTeacherId: string | null;
   weekType: "ODD" | "EVEN";
+  hasWeekRotation: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -244,29 +246,31 @@ export default function TimetableGrid({
             ))}
           </select>
 
-          {/* Week type segmented control */}
-          <div className="ml-auto flex items-center gap-1 rounded-lg border border-card-border p-1">
-            <button
-              onClick={() => handleWeekTypeChange("ODD")}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                weekType === "ODD"
-                  ? "bg-accent text-white"
-                  : "bg-background text-muted hover:text-foreground"
-              }`}
-            >
-              Odd Week
-            </button>
-            <button
-              onClick={() => handleWeekTypeChange("EVEN")}
-              className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-                weekType === "EVEN"
-                  ? "bg-accent text-white"
-                  : "bg-background text-muted hover:text-foreground"
-              }`}
-            >
-              Even Week
-            </button>
-          </div>
+          {/* Week type segmented control — only shown if rotation entries exist */}
+          {hasWeekRotation && (
+            <div className="ml-auto flex items-center gap-1 rounded-lg border border-card-border p-1">
+              <button
+                onClick={() => handleWeekTypeChange("ODD")}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  weekType === "ODD"
+                    ? "bg-accent text-white"
+                    : "bg-background text-muted hover:text-foreground"
+                }`}
+              >
+                Odd Week
+              </button>
+              <button
+                onClick={() => handleWeekTypeChange("EVEN")}
+                className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+                  weekType === "EVEN"
+                    ? "bg-accent text-white"
+                    : "bg-background text-muted hover:text-foreground"
+                }`}
+              >
+                Even Week
+              </button>
+            </div>
+          )}
 
           {isPending && (
             <span className="text-xs text-muted">Loading...</span>
@@ -322,7 +326,7 @@ export default function TimetableGrid({
                     return (
                       <td
                         key={dayOfWeek}
-                        className="relative border-b border-r border-card-border last:border-r-0 last:border-b-0"
+                        className="relative border-b border-r border-card-border last:border-r-0"
                       >
                         {isEditing ? (
                           /* Inline edit form */

@@ -44,9 +44,10 @@ type Props = {
   date: string;
   dayLabel: string;
   weekType: "ODD" | "EVEN";
+  hasWeekRotation: boolean;
 };
 
-export default function DashboardContent({ date, dayLabel, weekType }: Props) {
+export default function DashboardContent({ date, dayLabel, weekType, hasWeekRotation }: Props) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
   const [weekOverride, setWeekOverride] = useState<"ODD" | "EVEN" | null>(null);
@@ -243,8 +244,8 @@ export default function DashboardContent({ date, dayLabel, weekType }: Props) {
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted">{formattedDate}</span>
 
-          {/* Week type badge */}
-          {!isWeekend && (
+          {/* Week type badge — only shown if timetable uses odd/even rotation */}
+          {!isWeekend && hasWeekRotation && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-light px-2.5 py-1 text-xs font-semibold text-accent">
               {effectiveWeekType === "ODD" ? "Odd Week" : "Even Week"}
               {weekOverride && (

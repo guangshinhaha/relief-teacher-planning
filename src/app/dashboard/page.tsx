@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import DashboardContent from "./DashboardContent";
 import { getWeekType } from "@/lib/weekType";
 
@@ -19,6 +20,12 @@ export default async function DashboardPage({
   const dayLabel = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][jsDay];
   const weekType = getWeekType(selectedDate);
 
+  const rotationEntry = await prisma.timetableEntry.findFirst({
+    where: { weekType: { in: ["ODD", "EVEN"] } },
+    select: { id: true },
+  });
+  const hasWeekRotation = !!rotationEntry;
+
   return (
     <div>
       <div className="mb-8">
@@ -29,7 +36,7 @@ export default async function DashboardPage({
           Manage daily relief teacher assignments.
         </p>
       </div>
-      <DashboardContent date={dateStr} dayLabel={dayLabel} weekType={weekType} />
+      <DashboardContent date={dateStr} dayLabel={dayLabel} weekType={weekType} hasWeekRotation={hasWeekRotation} />
     </div>
   );
 }
