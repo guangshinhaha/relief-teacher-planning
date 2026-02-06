@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { addPeriod, deletePeriod } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage() {
   const periods = await prisma.period.findMany({
     orderBy: { number: "asc" },

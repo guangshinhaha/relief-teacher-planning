@@ -2,6 +2,8 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import SickReportForm from "./SickReportForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const teachers = await prisma.teacher.findMany({
     where: { type: "REGULAR" },

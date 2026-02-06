@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { addTeacher, deleteTeacher } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function TeachersPage() {
   const teachers = await prisma.teacher.findMany({
     orderBy: { createdAt: "desc" },

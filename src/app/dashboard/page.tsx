@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import DashboardContent from "./DashboardContent";
 
+export const dynamic = "force-dynamic";
+
 const DAY_LABELS: Record<number, string> = {
   0: "Sunday",
   1: "Monday",
