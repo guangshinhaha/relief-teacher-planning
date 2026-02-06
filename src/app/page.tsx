@@ -38,7 +38,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-accent/[0.04] blur-3xl" />
         </div>
-        <div className="mx-auto max-w-5xl px-6 pb-20 pt-20 text-center sm:pt-28">
+        <div className="mx-auto max-w-5xl px-6 pb-12 pt-12 text-center sm:pb-20 sm:pt-28">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent-light px-4 py-1.5">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
             <span className="text-sm font-medium text-accent-dark">
@@ -87,7 +87,7 @@ export default function LandingPage() {
 
       {/* Problem */}
       <section className="border-t border-card-border/50 bg-card/50">
-        <div className="mx-auto max-w-5xl px-6 py-20">
+        <div className="mx-auto max-w-5xl px-6 py-10 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               The morning rush shouldn&apos;t be this stressful
@@ -163,7 +163,7 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section className="border-t border-card-border/50">
-        <div className="mx-auto max-w-5xl px-6 py-20">
+        <div className="mx-auto max-w-5xl px-6 py-10 md:py-20">
           <div className="text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Three steps. Zero stress.
@@ -240,7 +240,7 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="border-t border-card-border/50 bg-card/50">
-        <div className="mx-auto max-w-5xl px-6 py-20">
+        <div className="mx-auto max-w-5xl px-6 py-10 md:py-20">
           <div className="text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Built for how schools actually work
@@ -322,7 +322,7 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="border-t border-card-border/50">
-        <div className="mx-auto max-w-5xl px-6 py-20 text-center">
+        <div className="mx-auto max-w-5xl px-6 py-10 text-center md:py-20">
           <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Ready to simplify relief planning?
           </h2>

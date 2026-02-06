@@ -106,7 +106,7 @@ export default function SettingsClient({
         <p className="mb-4 text-sm text-muted">
           Define a new period with its time range.
         </p>
-        <form onSubmit={handleAdd} className="flex flex-wrap items-end gap-4">
+        <form onSubmit={handleAdd} className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end">
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="number"
@@ -121,7 +121,7 @@ export default function SettingsClient({
               min={1}
               required
               placeholder="e.g. 1"
-              className="h-10 w-28 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground placeholder:text-muted/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="h-10 w-full rounded-lg border border-card-border bg-background px-3 text-sm text-foreground placeholder:text-muted/50 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 md:w-28"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -136,7 +136,7 @@ export default function SettingsClient({
               id="startTime"
               name="startTime"
               required
-              className="h-10 w-36 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="h-10 w-full rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 md:w-36"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -151,13 +151,13 @@ export default function SettingsClient({
               id="endTime"
               name="endTime"
               required
-              className="h-10 w-36 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="h-10 w-full rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20 md:w-36"
             />
           </div>
           <button
             type="submit"
             disabled={isAdding}
-            className="h-10 rounded-lg bg-accent px-5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 disabled:opacity-50"
+            className="h-10 w-full rounded-lg bg-accent px-5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent/20 focus:ring-offset-2 disabled:opacity-50 md:w-auto"
           >
             {isAdding ? "Adding..." : "Add Period"}
           </button>
@@ -178,47 +178,43 @@ export default function SettingsClient({
         </div>
 
         {periods.length > 0 && (
-          <div className="divide-y divide-card-border">
-            {/* Table header */}
-            <div className="grid grid-cols-[80px_1fr_1fr_80px] items-center gap-4 px-6 py-3">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted">
-                Period
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wide text-muted">
-                Start Time
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wide text-muted">
-                End Time
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wide text-muted">
-                Action
-              </span>
+          <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden divide-y divide-card-border md:block">
+              <div className="grid grid-cols-[80px_1fr_1fr_80px] items-center gap-4 px-6 py-3">
+                <span className="text-xs font-medium uppercase tracking-wide text-muted">Period</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-muted">Start Time</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-muted">End Time</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-muted">Action</span>
+              </div>
+              {periods.map((period) => (
+                <div key={period.id} className="grid grid-cols-[80px_1fr_1fr_80px] items-center gap-4 px-6 py-4 transition-colors hover:bg-accent-light/30">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-light font-display text-sm font-bold text-accent">{period.number}</div>
+                  <span className="text-sm font-medium text-foreground">{period.startTime}</span>
+                  <span className="text-sm font-medium text-foreground">{period.endTime}</span>
+                  <button onClick={() => handleDelete(period.id)} className="rounded-md px-2.5 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-light">Delete</button>
+                </div>
+              ))}
             </div>
 
-            {/* Table rows */}
-            {periods.map((period) => (
-              <div
-                key={period.id}
-                className="grid grid-cols-[80px_1fr_1fr_80px] items-center gap-4 px-6 py-4 transition-colors hover:bg-accent-light/30"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-light font-display text-sm font-bold text-accent">
-                  {period.number}
+            {/* Mobile cards — hidden on desktop */}
+            <div className="divide-y divide-card-border md:hidden">
+              {periods.map((period) => (
+                <div key={period.id} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-light font-display text-sm font-bold text-accent">{period.number}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">Period {period.number}</p>
+                    <p className="text-xs text-muted">{period.startTime} – {period.endTime}</p>
+                  </div>
+                  <button onClick={() => handleDelete(period.id)} className="shrink-0 rounded-md p-2 text-danger transition-colors hover:bg-danger-light">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
                 </div>
-                <span className="text-sm font-medium text-foreground">
-                  {period.startTime}
-                </span>
-                <span className="text-sm font-medium text-foreground">
-                  {period.endTime}
-                </span>
-                <button
-                  onClick={() => handleDelete(period.id)}
-                  className="rounded-md px-2.5 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-light"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {periods.length === 0 && (

@@ -185,7 +185,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
   return (
     <div>
       {/* Date navigation */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2 md:mb-6 md:gap-4">
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigateDay(-1)}
@@ -360,7 +360,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
       {!isWeekend && (
         <>
           {/* Summary stats */}
-          <div className="mb-6 grid grid-cols-3 gap-4">
+          <div className="mb-4 grid grid-cols-3 gap-2 md:mb-6 md:gap-4">
             <div className="rounded-xl border border-card-border bg-card p-4 shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-muted">
                 Sick Teachers
@@ -436,7 +436,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
                   className="overflow-hidden rounded-xl border border-card-border bg-card shadow-sm"
                 >
                   {/* Card header */}
-                  <div className="flex items-center justify-between border-b border-card-border px-6 py-4">
+                  <div className="flex items-center justify-between border-b border-card-border px-4 py-3 md:px-6 md:py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-danger-light font-display text-sm font-bold text-danger">
                         {card.teacherName
@@ -474,7 +474,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
                     {card.periods.map((slot) => (
                       <div
                         key={slot.timetableEntryId}
-                        className={`flex items-center gap-4 px-6 py-4 ${
+                        className={`flex items-center gap-3 px-4 py-3 md:gap-4 md:px-6 md:py-4 ${
                           slot.isCovered
                             ? "bg-success-light/30"
                             : "bg-danger-light/30"
@@ -507,8 +507,8 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
 
                         {/* Status / action */}
                         {slot.isCovered ? (
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 rounded-lg bg-success-light px-3 py-2">
+                          <div className="flex items-center gap-1.5 md:gap-2">
+                            <div className="flex items-center gap-1.5 rounded-lg bg-success-light px-2 py-1.5 md:gap-2 md:px-3 md:py-2">
                               <svg
                                 className="h-4 w-4 text-success"
                                 fill="none"
@@ -541,7 +541,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
                         ) : (
                           <button
                             onClick={() => openAssignModal(card, slot)}
-                            className="flex h-10 items-center gap-2 rounded-lg bg-accent px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-dark"
+                            className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-accent px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-dark md:px-4"
                           >
                             <svg
                               className="h-4 w-4"
@@ -556,7 +556,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
                                 d="M12 4.5v15m7.5-7.5h-15"
                               />
                             </svg>
-                            Assign
+                            <span className="hidden sm:inline">Assign</span>
                           </button>
                         )}
                       </div>

@@ -82,7 +82,7 @@ export default function AssignReliefModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
@@ -184,11 +184,11 @@ export default function AssignReliefModal({
           )}
 
           {/* Actions */}
-          <div className="mt-5 flex items-center justify-end gap-3">
+          <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="h-10 rounded-lg border border-card-border bg-background px-4 text-sm font-medium text-muted transition-colors hover:text-foreground"
+              className="h-10 w-full rounded-lg border border-card-border bg-background px-4 text-sm font-medium text-muted transition-colors hover:text-foreground sm:w-auto"
             >
               Cancel
             </button>
@@ -196,7 +196,7 @@ export default function AssignReliefModal({
               <button
                 type="submit"
                 disabled={isPending}
-                className="h-10 rounded-lg bg-accent px-5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50"
+                className="h-10 w-full rounded-lg bg-accent px-5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 {isPending ? "Assigning..." : "Assign Teacher"}
               </button>

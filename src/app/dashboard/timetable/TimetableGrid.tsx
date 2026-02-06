@@ -56,6 +56,13 @@ export default function TimetableGrid({
   const [isEditMode, setIsEditMode] = useState(false);
   const [showEditConfirm, setShowEditConfirm] = useState(false);
 
+  // Mobile: selected day for day-by-day view (0=Mon .. 4=Fri)
+  const [selectedDay, setSelectedDay] = useState(() => {
+    const today = new Date().getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+    if (today >= 1 && today <= 5) return today; // Mon-Fri
+    return 1; // Default to Monday on weekends
+  });
+
   // Sync local state when server props change (teacher/week switch)
   useEffect(() => {
     setLocalEntries(initialEntries);
@@ -180,7 +187,7 @@ export default function TimetableGrid({
             <select
               value={selectedTeacherId ?? ""}
               onChange={(e) => handleTeacherChange(e.target.value)}
-              className="h-10 w-72 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+              className="h-10 w-full md:w-72 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
             >
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
@@ -229,24 +236,26 @@ export default function TimetableGrid({
     <div>
       {/* Teacher selector + Week type toggle */}
       <div className="mb-6 rounded-xl border border-card-border bg-card p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-4">
-          <label className="text-sm font-medium text-foreground">
-            Select Teacher:
-          </label>
-          <select
-            value={selectedTeacherId ?? ""}
-            onChange={(e) => handleTeacherChange(e.target.value)}
-            className="h-10 w-72 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
-          >
-            {teachers.map((teacher) => (
-              <option key={teacher.id} value={teacher.id}>
-                {teacher.name}{" "}
-                {teacher.type === "PERMANENT_RELIEF"
-                  ? "(Relief)"
-                  : "(Regular)"}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:gap-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4">
+            <label className="text-sm font-medium text-foreground">
+              Select Teacher:
+            </label>
+            <select
+              value={selectedTeacherId ?? ""}
+              onChange={(e) => handleTeacherChange(e.target.value)}
+              className="h-10 w-full md:w-72 rounded-lg border border-card-border bg-background px-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              {teachers.map((teacher) => (
+                <option key={teacher.id} value={teacher.id}>
+                  {teacher.name}{" "}
+                  {teacher.type === "PERMANENT_RELIEF"
+                    ? "(Relief)"
+                    : "(Regular)"}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Week type segmented control — only shown if rotation entries exist */}
           {hasWeekRotation && (
@@ -315,7 +324,7 @@ export default function TimetableGrid({
 
       {/* Edit confirmation modal */}
       {showEditConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-sm rounded-xl border border-card-border bg-card p-6 shadow-lg">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-warning-light">
               <svg
@@ -359,8 +368,132 @@ export default function TimetableGrid({
         </div>
       )}
 
+      {/* Mobile day-by-day view — hidden on desktop */}
+      <div className="md:hidden">
+        {/* Day tabs */}
+        <div className="mb-4 flex gap-1 rounded-lg border border-card-border bg-card p-1">
+          {DAY_NAMES.map((day, idx) => {
+            const dayOfWeek = idx + 1;
+            return (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(dayOfWeek)}
+                className={`flex-1 rounded-md px-2 py-2 text-sm font-medium transition-colors ${
+                  selectedDay === dayOfWeek
+                    ? "bg-accent text-white shadow-sm"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Period cards for selected day */}
+        <div className="space-y-2">
+          {periods.map((period) => {
+            const entry = entryMap.get(`${period.id}-${selectedDay}`);
+            const isEditing =
+              editingCell?.periodId === period.id &&
+              editingCell?.dayOfWeek === selectedDay;
+
+            return (
+              <div
+                key={period.id}
+                className="rounded-xl border border-card-border bg-card shadow-sm"
+              >
+                {isEditMode && isEditing ? (
+                  <div className="p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-light font-display text-xs font-bold text-accent">
+                        {period.number}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {period.startTime} – {period.endTime}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={formClassName}
+                        onChange={(e) => setFormClassName(e.target.value)}
+                        placeholder="Class (e.g. 3A)"
+                        autoFocus
+                        className="h-10 w-full rounded-lg border border-card-border bg-background px-3 text-sm text-foreground placeholder:text-muted/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
+                      />
+                      <input
+                        type="text"
+                        value={formSubject}
+                        onChange={(e) => setFormSubject(e.target.value)}
+                        placeholder="Subject (e.g. Math)"
+                        className="h-10 w-full rounded-lg border border-card-border bg-background px-3 text-sm text-foreground placeholder:text-muted/50 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleSave}
+                          disabled={isMutating || !formClassName.trim() || !formSubject.trim()}
+                          className="flex-1 rounded-lg bg-accent px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark disabled:opacity-50"
+                        >
+                          {isMutating ? "Saving..." : "Save"}
+                        </button>
+                        <button
+                          onClick={closeEditor}
+                          className="flex-1 rounded-lg border border-card-border bg-background px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={`flex items-center gap-3 p-4 ${isEditMode ? "cursor-pointer transition-colors hover:bg-accent-light/30" : ""}`}
+                    onClick={isEditMode ? () => openEditor(period.id, selectedDay) : undefined}
+                  >
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent-light font-display text-xs font-bold text-accent">
+                      {period.number}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      {entry ? (
+                        <>
+                          <p className="text-sm font-semibold text-foreground">
+                            {entry.className}
+                          </p>
+                          <p className="text-xs text-muted">{entry.subject}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted/50">
+                          {isEditMode ? "Tap to add" : "Free period"}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted">
+                      {period.startTime} – {period.endTime}
+                    </span>
+                    {isEditMode && entry && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(entry.id);
+                        }}
+                        className="shrink-0 rounded-md p-1.5 text-danger transition-colors hover:bg-danger-light"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Timetable grid */}
-      <div className="overflow-hidden rounded-xl border border-card-border bg-card shadow-sm">
+      <div className="hidden overflow-hidden rounded-xl border border-card-border bg-card shadow-sm md:block">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -526,7 +659,7 @@ export default function TimetableGrid({
 
       {/* Legend (edit mode only) */}
       {isEditMode && (
-        <div className="mt-4 flex items-center gap-6 text-xs text-muted">
+        <div className="mt-4 hidden items-center gap-6 text-xs text-muted md:flex">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded border border-card-border bg-card"></span>
             Click empty cell to add

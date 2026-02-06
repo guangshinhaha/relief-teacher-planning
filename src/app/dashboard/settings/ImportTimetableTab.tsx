@@ -217,7 +217,7 @@ export default function ImportTimetableTab() {
           </label>
         ) : (
           /* Side-by-side upload for odd/even */
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-card-border px-6 py-10 transition-colors hover:border-accent hover:bg-accent-light/20">
               <svg className="mb-3 h-8 w-8 text-muted" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -248,7 +248,7 @@ export default function ImportTimetableTab() {
           <h2 className="font-display text-lg font-semibold text-foreground">
             Import Summary
           </h2>
-          <div className="mt-4 grid grid-cols-3 gap-4">
+          <div className="mt-4 grid grid-cols-3 gap-2 md:gap-4">
             <div className="rounded-lg bg-accent-light/50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-muted">Teachers</p>
               <p className="mt-1 font-display text-2xl font-bold text-foreground">{parsedData.teachers.length}</p>
