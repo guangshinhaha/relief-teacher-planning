@@ -20,6 +20,11 @@ export function parseAscXml(xmlString: string, weekType: "ALL" | "ODD" | "EVEN")
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, "text/xml");
 
+  const parseError = doc.querySelector("parsererror");
+  if (parseError) {
+    throw new Error(`XML parsing failed: ${parseError.textContent}`);
+  }
+
   // Parse periods
   const periodEls = doc.querySelectorAll("period");
   const periods: ParsedPeriod[] = [];
@@ -35,6 +40,7 @@ export function parseAscXml(xmlString: string, weekType: "ALL" | "ODD" | "EVEN")
   // Parse teachers
   const teacherEls = doc.querySelectorAll("teacher");
   const teacherMap = new Map<string, string>(); // id -> name
+  const teacherNames = new Set<string>();
   const teachers: ParsedTeacher[] = [];
   for (const el of teacherEls) {
     const id = el.getAttribute("id") || "";
@@ -53,7 +59,10 @@ export function parseAscXml(xmlString: string, weekType: "ALL" | "ODD" | "EVEN")
     }
     if (id && name) {
       teacherMap.set(id, name);
-      teachers.push({ name });
+      if (!teacherNames.has(name)) {
+        teacherNames.add(name);
+        teachers.push({ name });
+      }
     }
   }
 
