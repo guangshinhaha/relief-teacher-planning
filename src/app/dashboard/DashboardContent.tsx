@@ -51,7 +51,6 @@ export default function DashboardContent({ initialDate, hasWeekRotation }: Props
   const [weekOverride, setWeekOverride] = useState<"ODD" | "EVEN" | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUnassigning, setIsUnassigning] = useState(false);
   const [copiedFeedback, setCopiedFeedback] = useState(false);
 
   const [modalState, setModalState] = useState<{
@@ -134,23 +133,71 @@ export default function DashboardContent({ initialDate, hasWeekRotation }: Props
   }
 
   async function handleUnassign(assignmentId: string) {
-    setIsUnassigning(true);
+    if (!data) return;
+
+    // Snapshot for rollback
+    const previousData = data;
+
+    // Optimistic update: mark slot as uncovered
+    setData({
+      ...data,
+      sickTeachers: data.sickTeachers.map((card) => ({
+        ...card,
+        periods: card.periods.map((slot) => {
+          if (slot.assignmentId !== assignmentId) return slot;
+          return {
+            ...slot,
+            isCovered: false,
+            reliefTeacherName: null,
+            assignmentId: null,
+          };
+        }),
+      })),
+      totalUncovered: data.totalUncovered + 1,
+      totalCovered: data.totalCovered - 1,
+    });
+
     try {
       const res = await fetch(`/api/relief-assignments/${assignmentId}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to remove assignment");
-      await fetchDashboard();
+      // Background refetch to sync availableTeachers lists
+      fetchDashboard();
     } catch {
+      // Revert on failure
+      setData(previousData);
       alert("Failed to remove assignment.");
-    } finally {
-      setIsUnassigning(false);
     }
   }
 
-  async function handleAssignSuccess() {
+  async function handleAssignSuccess(assignedTeacher: { id: string; name: string }) {
+    const slot = modalState.periodSlot;
     closeModal();
-    await fetchDashboard();
+
+    if (!data || !slot) return;
+
+    // Optimistic update: mark slot as covered
+    setData({
+      ...data,
+      sickTeachers: data.sickTeachers.map((card) => ({
+        ...card,
+        periods: card.periods.map((p) => {
+          if (p.timetableEntryId !== slot.timetableEntryId) return p;
+          return {
+            ...p,
+            isCovered: true,
+            reliefTeacherName: assignedTeacher.name,
+            assignmentId: "optimistic-pending",
+          };
+        }),
+      })),
+      totalUncovered: data.totalUncovered - 1,
+      totalCovered: data.totalCovered + 1,
+    });
+
+    // Background refetch to get real assignmentId and update availableTeachers
+    fetchDashboard();
   }
 
   async function handleCopySummary() {
@@ -521,8 +568,7 @@ export default function DashboardContent({ initialDate, hasWeekRotation }: Props
                                 slot.assignmentId &&
                                 handleUnassign(slot.assignmentId)
                               }
-                              disabled={isUnassigning}
-                              className="rounded-md px-2 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-light disabled:opacity-50"
+                              className="rounded-md px-2 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger-light"
                               title="Remove assignment"
                             >
                               Remove

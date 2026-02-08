@@ -11,7 +11,7 @@ type AvailableTeacher = {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (assignedTeacher: { id: string; name: string }) => void;
   periodNumber: number;
   periodStartTime: string;
   periodEndTime: string;
@@ -69,7 +69,8 @@ export default function AssignReliefModal({
         throw new Error(body?.error || "Failed to assign relief teacher.");
       }
 
-      onSuccess();
+      const teacher = availableTeachers.find(t => t.id === reliefTeacherId)!;
+      onSuccess({ id: teacher.id, name: teacher.name });
     } catch (err) {
       alert(
         err instanceof Error
