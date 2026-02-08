@@ -57,6 +57,8 @@ model TimetableEntry {
   reliefAssignments ReliefAssignment[]
 
   @@unique([teacherId, dayOfWeek, periodId, weekType])
+  @@index([dayOfWeek, weekType])
+  @@index([teacherId])
 }
 
 model SickReport {
@@ -68,6 +70,9 @@ model SickReport {
 
   teacher           Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   reliefAssignments ReliefAssignment[]
+
+  @@index([startDate, endDate])
+  @@index([teacherId])
 }
 
 model ReliefAssignment {
@@ -83,4 +88,7 @@ model ReliefAssignment {
   reliefTeacher  Teacher        @relation(fields: [reliefTeacherId], references: [id], onDelete: Cascade)
 
   @@unique([timetableEntryId, date])
+  @@index([date])
+  @@index([reliefTeacherId, date])
+  @@index([sickReportId])
 }

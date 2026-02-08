@@ -106,9 +106,6 @@ export default function DashboardSidebar() {
           alt="StandIn"
           className="h-10 w-auto"
         />
-        <span className="font-display text-xl font-bold tracking-tight text-foreground">
-          StandIn
-        </span>
       </div>
 
       {/* Navigation */}
@@ -142,7 +139,6 @@ export default function DashboardSidebar() {
 
       {/* Footer */}
       <div className="border-t border-card-border px-6 py-4">
-        <p className="text-xs text-muted">StandIn</p>
         <p className="text-xs text-muted/60">v1.0.0</p>
       </div>
     </aside>
