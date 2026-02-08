@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import SettingsClient from "./SettingsClient";
 
-export const dynamic = "force-dynamic";
-
 export default async function SettingsPage() {
   const periods = await prisma.period.findMany({
     orderBy: { number: "asc" },

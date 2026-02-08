@@ -2,8 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { getWeekType } from "@/lib/weekType";
 import TimetableGrid from "./TimetableGrid";
 
-export const dynamic = "force-dynamic";
-
 export default async function TimetablePage({
   searchParams,
 }: {
