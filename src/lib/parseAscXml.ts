@@ -1,6 +1,6 @@
 // src/lib/parseAscXml.ts
 
-export type ParsedTeacher = { name: string };
+export type ParsedTeacher = { name: string; firstName: string; lastName: string; short: string };
 export type ParsedPeriod = { number: number; startTime: string; endTime: string };
 export type ParsedEntry = {
   teacherName: string;
@@ -61,7 +61,7 @@ export function parseAscXml(xmlString: string, weekType: "ALL" | "ODD" | "EVEN")
       teacherMap.set(id, name);
       if (!teacherNames.has(name)) {
         teacherNames.add(name);
-        teachers.push({ name });
+        teachers.push({ name, firstName: firstname, lastName: lastname, short });
       }
     }
   }

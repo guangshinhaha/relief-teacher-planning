@@ -29,14 +29,14 @@ async function main() {
 
   // Create teachers
   const teachersData = [
-    { name: "Mr Tan Wei Ming", type: TeacherType.REGULAR },
-    { name: "Ms Lim Siew Hua", type: TeacherType.REGULAR },
-    { name: "Mr Ahmad bin Hassan", type: TeacherType.REGULAR },
-    { name: "Ms Priya Nair", type: TeacherType.REGULAR },
-    { name: "Mr David Chen", type: TeacherType.REGULAR },
-    { name: "Ms Sarah Wong", type: TeacherType.REGULAR },
-    { name: "Mr Kumar Rajan", type: TeacherType.PERMANENT_RELIEF },
-    { name: "Ms Fatimah bte Ali", type: TeacherType.PERMANENT_RELIEF },
+    { name: "Tan Wei Ming", firstName: "Wei Ming", lastName: "Tan", short: "TWM", type: TeacherType.REGULAR },
+    { name: "Lim Siew Hua", firstName: "Siew Hua", lastName: "Lim", short: "LSH", type: TeacherType.REGULAR },
+    { name: "Ahmad bin Hassan", firstName: "Ahmad", lastName: "Hassan", short: "Ahmad", type: TeacherType.REGULAR },
+    { name: "Priya Nair", firstName: "Priya", lastName: "Nair", short: "Priya", type: TeacherType.REGULAR },
+    { name: "David Chen", firstName: "David", lastName: "Chen", short: "David", type: TeacherType.REGULAR },
+    { name: "Sarah Wong", firstName: "Sarah", lastName: "Wong", short: "Sarah", type: TeacherType.REGULAR },
+    { name: "Kumar Rajan", firstName: "Kumar", lastName: "Rajan", short: "KRaj", type: TeacherType.PERMANENT_RELIEF },
+    { name: "Fatimah Ali", firstName: "Fatimah", lastName: "Ali", short: "FAli", type: TeacherType.PERMANENT_RELIEF },
   ];
   const teachers = [];
   for (const t of teachersData) {

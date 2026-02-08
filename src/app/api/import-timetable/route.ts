@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { WeekType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-type ImportTeacher = { name: string };
+type ImportTeacher = { name: string; firstName?: string; lastName?: string; short?: string };
 type ImportPeriod = { number: number; startTime: string; endTime: string };
 type ImportEntry = {
   teacherName: string;
@@ -71,11 +71,25 @@ export async function POST(request: NextRequest) {
     const periodRecords = new Map<number, string>();
     for (const p of allPeriods) periodRecords.set(p.number, p.id);
 
-    // Bulk create teachers
-    const uniqueTeacherNames = [...new Set(teachers.map((t) => t.name))];
+    // Deduplicate teachers by name, keeping first occurrence
+    const uniqueTeacherMap = new Map<string, ImportTeacher>();
+    for (const t of teachers) {
+      if (!uniqueTeacherMap.has(t.name)) {
+        uniqueTeacherMap.set(t.name, t);
+      }
+    }
+    const uniqueTeachers = [...uniqueTeacherMap.values()];
+    const uniqueTeacherNames = uniqueTeachers.map((t) => t.name);
+
     if (mode === "replace") {
       await prisma.teacher.createMany({
-        data: uniqueTeacherNames.map((name) => ({ name, type: "REGULAR" as const })),
+        data: uniqueTeachers.map((t) => ({
+          name: t.name,
+          firstName: t.firstName || null,
+          lastName: t.lastName || null,
+          short: t.short || null,
+          type: "REGULAR" as const,
+        })),
       });
     } else {
       // Find existing teachers, create only new ones
@@ -83,10 +97,16 @@ export async function POST(request: NextRequest) {
         where: { name: { in: uniqueTeacherNames } },
       });
       const existingNames = new Set(existing.map((t) => t.name));
-      const newNames = uniqueTeacherNames.filter((n) => !existingNames.has(n));
-      if (newNames.length > 0) {
+      const newTeachers = uniqueTeachers.filter((t) => !existingNames.has(t.name));
+      if (newTeachers.length > 0) {
         await prisma.teacher.createMany({
-          data: newNames.map((name) => ({ name, type: "REGULAR" as const })),
+          data: newTeachers.map((t) => ({
+            name: t.name,
+            firstName: t.firstName || null,
+            lastName: t.lastName || null,
+            short: t.short || null,
+            type: "REGULAR" as const,
+          })),
         });
       }
     }

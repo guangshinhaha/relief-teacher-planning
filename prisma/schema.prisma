@@ -22,6 +22,9 @@ enum WeekType {
 model Teacher {
   id        String      @id @default(cuid())
   name      String
+  firstName String?
+  lastName  String?
+  short     String?
   type      TeacherType @default(REGULAR)
   createdAt DateTime    @default(now())
 
