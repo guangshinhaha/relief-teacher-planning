@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import AssignReliefModal from "./AssignReliefModal";
 import { generateReliefSummary } from "@/lib/generateReliefSummary";
+import { getWeekType } from "@/lib/weekType";
 
 type AvailableTeacher = {
   id: string;
@@ -42,15 +42,12 @@ type DashboardData = {
 };
 
 type Props = {
-  date: string;
-  dayLabel: string;
-  weekType: "ODD" | "EVEN";
+  initialDate: string;
   hasWeekRotation: boolean;
 };
 
-export default function DashboardContent({ date, dayLabel, weekType, hasWeekRotation }: Props) {
-  const router = useRouter();
-  const [isNavigating, setIsNavigating] = useState(false);
+export default function DashboardContent({ initialDate, hasWeekRotation }: Props) {
+  const [date, setDate] = useState(initialDate);
   const [weekOverride, setWeekOverride] = useState<"ODD" | "EVEN" | null>(null);
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,11 +66,12 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
     sickReportId: "",
   });
 
-  const effectiveWeekType = weekOverride ?? weekType;
-
-  // Determine if weekend from the date string
-  const jsDay = new Date(date + "T00:00:00").getDay();
+  const dateObj = new Date(date + "T00:00:00");
+  const jsDay = dateObj.getDay();
   const isWeekend = jsDay === 0 || jsDay === 6;
+  const dayLabel = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][jsDay];
+  const baseWeekType = getWeekType(dateObj);
+  const effectiveWeekType = weekOverride ?? baseWeekType;
 
   const fetchDashboard = useCallback(async () => {
     setIsLoading(true);
@@ -92,17 +90,13 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
   }, [date, effectiveWeekType]);
 
   useEffect(() => {
-    // Reset week override when date changes
-    setWeekOverride(null);
-  }, [date]);
-
-  useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
 
   function handleDateChange(newDate: string) {
-    setIsNavigating(true);
-    router.push(`/dashboard?date=${newDate}`);
+    setDate(newDate);
+    setWeekOverride(null);
+    window.history.replaceState(null, "", `/dashboard?date=${newDate}`);
   }
 
   function navigateDay(offset: number) {
@@ -116,7 +110,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
 
   function toggleWeekType() {
     setWeekOverride((prev) => {
-      const current = prev ?? weekType;
+      const current = prev ?? baseWeekType;
       return current === "ODD" ? "EVEN" : "ODD";
     });
   }
@@ -168,7 +162,6 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
   }
 
   // Format date for display
-  const dateObj = new Date(date + "T00:00:00");
   const formattedDate = dateObj.toLocaleDateString("en-NZ", {
     weekday: "long",
     day: "numeric",
@@ -189,8 +182,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigateDay(-1)}
-            disabled={isNavigating}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-card-border bg-card text-muted transition-colors hover:bg-accent-light hover:text-accent disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-card-border bg-card text-muted transition-colors hover:bg-accent-light hover:text-accent"
             title="Previous day"
           >
             <svg
@@ -217,8 +209,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
 
           <button
             onClick={() => navigateDay(1)}
-            disabled={isNavigating}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-card-border bg-card text-muted transition-colors hover:bg-accent-light hover:text-accent disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-card-border bg-card text-muted transition-colors hover:bg-accent-light hover:text-accent"
             title="Next day"
           >
             <svg
@@ -245,8 +236,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
             const dd = String(today.getDate()).padStart(2, "0");
             handleDateChange(`${yyyy}-${mm}-${dd}`);
           }}
-          disabled={isNavigating}
-          className="h-10 rounded-lg border border-card-border bg-card px-4 text-sm font-medium text-muted transition-colors hover:bg-accent-light hover:text-accent disabled:opacity-50"
+          className="h-10 rounded-lg border border-card-border bg-card px-4 text-sm font-medium text-muted transition-colors hover:bg-accent-light hover:text-accent"
         >
           Today
         </button>
@@ -326,7 +316,7 @@ export default function DashboardContent({ date, dayLabel, weekType, hasWeekRota
             </span>
           )}
 
-          {(isNavigating || isLoading) && (
+          {isLoading && (
             <span className="text-xs text-muted">Loading...</span>
           )}
         </div>
