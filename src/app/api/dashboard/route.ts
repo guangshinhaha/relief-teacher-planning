@@ -51,7 +51,17 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  const sickTeacherIds = sickReports.map((sr) => sr.teacherId);
+  // Deduplicate: keep only the latest sick report per teacher (by createdAt)
+  const latestByTeacher = new Map<string, (typeof sickReports)[number]>();
+  for (const sr of sickReports) {
+    const existing = latestByTeacher.get(sr.teacherId);
+    if (!existing || sr.createdAt > existing.createdAt) {
+      latestByTeacher.set(sr.teacherId, sr);
+    }
+  }
+  const dedupedSickReports = Array.from(latestByTeacher.values());
+
+  const sickTeacherIds = dedupedSickReports.map((sr) => sr.teacherId);
 
   // Run remaining queries in parallel — they're all independent
   const [sickTeacherEntries, allTeachers, allEntriesForDay, existingAssignments] =
@@ -113,7 +123,7 @@ export async function GET(request: NextRequest) {
     string,
     { id: string; reliefTeacherName: string }
   >();
-  for (const sr of sickReports) {
+  for (const sr of dedupedSickReports) {
     for (const ra of sr.reliefAssignments) {
       assignmentByEntry.set(ra.timetableEntryId, {
         id: ra.id,
@@ -134,7 +144,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const sickTeacherCards = sickReports
+  const sickTeacherCards = dedupedSickReports
     .map((sr) => {
       const entries = sickTeacherEntries.filter(
         (e) => e.teacherId === sr.teacherId
