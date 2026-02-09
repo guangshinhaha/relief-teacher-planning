@@ -16,9 +16,7 @@ export default function DashboardLayout({
 
       {/* Main content */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        {/* Mobile header — hidden on desktop */}
         <MobileHeader />
-
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-6xl px-4 py-4 md:px-8 md:py-8">
             {children}
