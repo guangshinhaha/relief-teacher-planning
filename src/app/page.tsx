@@ -9,11 +9,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <img
               src="/stand-in-logo.svg"
-              alt="StandIn"
+              alt="ReliefCher"
               className="h-10 w-auto"
             />
             <span className="font-display text-xl font-bold tracking-tight text-foreground">
-              StandIn
+              ReliefCher
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export default function LandingPage() {
             <span className="text-accent">Start standing in.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted sm:text-xl">
-            When a teacher calls in sick, every minute counts. StandIn replaces
+            When a teacher calls in sick, every minute counts. ReliefCher replaces
             the morning chaos of WhatsApp messages and manual tracking with a
             simple, real-time system.
           </p>
@@ -373,7 +373,7 @@ export default function LandingPage() {
               },
               {
                 title: "Odd/even week rotation",
-                desc: "Schools with alternating timetables can upload separate schedules for odd and even weeks. StandIn handles both seamlessly.",
+                desc: "Schools with alternating timetables can upload separate schedules for odd and even weeks. ReliefCher handles both seamlessly.",
                 icon: (
                   <path
                     strokeLinecap="round"
@@ -476,7 +476,7 @@ export default function LandingPage() {
       <footer className="border-t border-card-border/50 bg-card/50">
         <div className="mx-auto max-w-5xl px-6 py-8 text-center">
           <p className="text-sm text-muted">
-            StandIn — Relief teacher planning for schools
+            ReliefCher — Relief teacher planning for schools
           </p>
         </div>
       </footer>

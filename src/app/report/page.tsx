@@ -18,7 +18,7 @@ export default async function ReportPage() {
         <div className="mb-3">
           <img
             src="/stand-in-logo.svg"
-            alt="StandIn"
+            alt="ReliefCher"
             className="mx-auto h-10 w-auto"
           />
         </div>

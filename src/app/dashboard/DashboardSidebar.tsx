@@ -103,7 +103,7 @@ export default function DashboardSidebar() {
       <div className="flex items-center gap-3 border-b border-card-border px-6 py-5">
         <img
           src="/stand-in-logo.svg"
-          alt="StandIn"
+          alt="ReliefCher"
           className="h-10 w-auto"
         />
       </div>

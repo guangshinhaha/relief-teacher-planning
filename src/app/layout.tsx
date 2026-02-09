@@ -13,7 +13,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "StandIn — Relief Teacher Planning",
+  title: "ReliefCher — Relief Teacher Planning",
   description: "Simplify relief teacher assignments when teachers report sick. One-click reporting, smart scheduling, real-time dashboard.",
 };
 
