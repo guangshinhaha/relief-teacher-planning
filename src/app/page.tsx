@@ -238,16 +238,117 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
+      {/* Getting Started */}
       <section className="border-t border-card-border/50 bg-card/50">
+        <div className="mx-auto max-w-5xl px-6 py-10 md:py-20">
+          <div className="text-center">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Up and running in minutes
+            </h2>
+            <p className="mt-4 text-lg text-muted">
+              Already using aSc Timetables? Import your entire school timetable
+              with one file upload.
+            </p>
+          </div>
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: "1",
+                title: "Export from aSc Timetables",
+                desc: "In aSc Timetables, go to File \u2192 Export \u2192 XML and save the .xml file.",
+                icon: (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+                  />
+                ),
+              },
+              {
+                step: "2",
+                title: "Upload in Settings",
+                desc: "Open Dashboard \u2192 Settings \u2192 Import Timetable and upload your XML file.",
+                icon: (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z"
+                  />
+                ),
+              },
+              {
+                step: "3",
+                title: "Auto-generated data",
+                desc: "Teachers, periods, classes, and the full timetable are created automatically from your XML.",
+                icon: (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"
+                  />
+                ),
+              },
+              {
+                step: "4",
+                title: "Ready to go",
+                desc: "Teachers can report sick and the KP can assign relief \u2014 all powered by your real timetable.",
+                icon: (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                  />
+                ),
+              },
+            ].map((item) => (
+              <div key={item.step} className="relative text-center">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-light">
+                  <svg
+                    className="h-7 w-7 text-accent"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    {item.icon}
+                  </svg>
+                </div>
+                <div className="mb-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                  {item.step}
+                </div>
+                <h3 className="font-display text-lg font-semibold text-foreground">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="border-t border-card-border/50">
         <div className="mx-auto max-w-5xl px-6 py-10 md:py-20">
           <div className="text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               Built for how schools actually work
             </h2>
           </div>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              {
+                title: "aSc Timetable import",
+                desc: "Upload your aSc Timetables XML export and automatically generate all teachers, periods, and timetable entries. No manual data entry.",
+                icon: (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"
+                  />
+                ),
+              },
               {
                 title: "One-click sick reporting",
                 desc: "Teachers select their name and dates \u2014 no accounts, no passwords, no friction. The form takes 30 seconds flat.",
@@ -260,7 +361,7 @@ export default function LandingPage() {
                 ),
               },
               {
-                title: "Smart availability detection",
+                title: "Smart availability",
                 desc: "Automatically knows which teachers are free based on their timetable. No more guessing or checking spreadsheets.",
                 icon: (
                   <path
@@ -271,24 +372,35 @@ export default function LandingPage() {
                 ),
               },
               {
-                title: "Timetable-aware scheduling",
-                desc: "Loaded with your school\u2019s full weekly timetable. When someone\u2019s absent, every affected period surfaces instantly.",
+                title: "Odd/even week rotation",
+                desc: "Schools with alternating timetables can upload separate schedules for odd and even weeks. StandIn handles both seamlessly.",
                 icon: (
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0 1 12 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c.621 0 1.125.504 1.125 1.125M10.875 12c-.621 0-1.125.504-1.125 1.125M12 12c.621 0 1.125.504 1.125 1.125m0 0v1.5c0 .621-.504 1.125-1.125 1.125M12 15.75c-.621 0-1.125-.504-1.125-1.125m0 0v-1.5c0-.621.504-1.125 1.125-1.125m0 3.75c.621 0 1.125-.504 1.125-1.125m0 0v-1.5c0-.621-.504-1.125-1.125-1.125"
+                    d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 0 0-3.7-3.7 48.678 48.678 0 0 0-7.324 0 4.006 4.006 0 0 0-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 0 0 3.7 3.7 48.656 48.656 0 0 0 7.324 0 4.006 4.006 0 0 0 3.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3-3 3"
                   />
                 ),
               },
               {
-                title: "Real-time relief dashboard",
+                title: "Real-time dashboard",
                 desc: "One screen shows everything: who\u2019s absent, which periods need coverage, and who\u2019s been assigned. Clarity at a glance.",
                 icon: (
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"
+                  />
+                ),
+              },
+              {
+                title: "Mobile friendly",
+                desc: "Works on any device. Teachers can report sick from their phone, and KPs can manage relief on the go.",
+                icon: (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"
                   />
                 ),
               },
@@ -327,8 +439,8 @@ export default function LandingPage() {
             Ready to simplify relief planning?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-muted">
-            No setup fees, no complicated onboarding. Just add your teachers and
-            timetable, and you&apos;re good to go.
+            Import your aSc Timetable, and you&apos;re ready to go. No setup
+            fees, no complicated onboarding.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
