@@ -12,9 +12,6 @@ export default function LandingPage() {
               alt="ReliefCher"
               className="h-10 w-auto"
             />
-            <span className="font-display text-xl font-bold tracking-tight text-foreground">
-              ReliefCher
-            </span>
           </div>
           <div className="flex items-center gap-3">
             <Link
