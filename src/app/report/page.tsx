@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import SickReportForm from "./SickReportForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReportPage() {
+  const schoolId = await getSchoolId();
   const teachers = await prisma.teacher.findMany({
-    where: { type: "REGULAR" },
+    where: { type: "REGULAR", schoolId },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   });

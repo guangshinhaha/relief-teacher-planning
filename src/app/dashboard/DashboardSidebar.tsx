@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSchool } from "@/lib/SchoolContext";
 
 const navItems = [
   {
     label: "Dashboard",
-    href: "/dashboard",
+    path: "",
     icon: (
       <svg
         className="h-5 w-5"
@@ -25,7 +26,7 @@ const navItems = [
   },
   {
     label: "Teachers",
-    href: "/dashboard/teachers",
+    path: "/teachers",
     icon: (
       <svg
         className="h-5 w-5"
@@ -44,7 +45,7 @@ const navItems = [
   },
   {
     label: "Timetable",
-    href: "/dashboard/timetable",
+    path: "/timetable",
     icon: (
       <svg
         className="h-5 w-5"
@@ -63,7 +64,7 @@ const navItems = [
   },
   {
     label: "Settings",
-    href: "/dashboard/settings",
+    path: "/settings",
     icon: (
       <svg
         className="h-5 w-5"
@@ -89,10 +90,12 @@ const navItems = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const { basePath, isDemo } = useSchool();
 
-  function isActive(href: string) {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
+  function isActive(path: string) {
+    const href = basePath + path;
+    if (path === "") {
+      return pathname === basePath;
     }
     return pathname.startsWith(href);
   }
@@ -106,16 +109,22 @@ export default function DashboardSidebar() {
           alt="ReliefCher"
           className="h-10 w-auto"
         />
+        {isDemo && (
+          <span className="rounded-full bg-warning-light px-2 py-0.5 text-xs font-medium text-warning">
+            Demo
+          </span>
+        )}
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
-          const active = isActive(item.href);
+          const active = isActive(item.path);
+          const href = basePath + item.path;
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={item.path}
+              href={href}
               className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
                 active
                   ? "bg-accent-light text-accent-dark"
@@ -139,7 +148,16 @@ export default function DashboardSidebar() {
 
       {/* Footer */}
       <div className="border-t border-card-border px-6 py-4">
-        <p className="text-xs text-muted/60">v1.0.0</p>
+        {isDemo ? (
+          <Link
+            href="/login"
+            className="text-sm font-medium text-accent hover:text-accent-dark"
+          >
+            Sign in
+          </Link>
+        ) : (
+          <p className="text-xs text-muted/60">v1.0.0</p>
+        )}
       </div>
     </aside>
   );

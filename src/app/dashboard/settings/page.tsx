@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import SettingsClient from "./SettingsClient";
 
 export default async function SettingsPage() {
+  const schoolId = await getSchoolId();
   const periods = await prisma.period.findMany({
+    where: { schoolId },
     orderBy: { number: "asc" },
   });
 

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import { WeekType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,6 +15,7 @@ type ImportEntry = {
 };
 
 export async function POST(request: NextRequest) {
+  const schoolId = await getSchoolId();
   const body = await request.json();
   const { mode, teachers, periods, entries } = body as {
     mode: "replace" | "merge";
@@ -37,13 +39,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Replace mode: delete everything first (outside main transaction to reduce duration)
+    // Replace mode: delete everything for THIS school only
     if (mode === "replace") {
-      await prisma.reliefAssignment.deleteMany();
-      await prisma.sickReport.deleteMany();
-      await prisma.timetableEntry.deleteMany();
-      await prisma.teacher.deleteMany();
-      await prisma.period.deleteMany();
+      await prisma.reliefAssignment.deleteMany({ where: { schoolId } });
+      await prisma.sickReport.deleteMany({ where: { schoolId } });
+      await prisma.timetableEntry.deleteMany({ where: { schoolId } });
+      await prisma.teacher.deleteMany({ where: { schoolId } });
+      await prisma.period.deleteMany({ where: { schoolId } });
     }
 
     // Bulk create periods
@@ -53,21 +55,22 @@ export async function POST(request: NextRequest) {
           number: p.number,
           startTime: p.startTime,
           endTime: p.endTime,
+          schoolId,
         })),
       });
     } else {
       // Upsert periods one by one (only 10 or so — fast enough)
       for (const p of periods) {
         await prisma.period.upsert({
-          where: { number: p.number },
+          where: { schoolId_number: { schoolId, number: p.number } },
           update: { startTime: p.startTime, endTime: p.endTime },
-          create: { number: p.number, startTime: p.startTime, endTime: p.endTime },
+          create: { number: p.number, startTime: p.startTime, endTime: p.endTime, schoolId },
         });
       }
     }
 
-    // Fetch all periods to build number -> id map
-    const allPeriods = await prisma.period.findMany();
+    // Fetch all periods for this school to build number -> id map
+    const allPeriods = await prisma.period.findMany({ where: { schoolId } });
     const periodRecords = new Map<number, string>();
     for (const p of allPeriods) periodRecords.set(p.number, p.id);
 
@@ -89,12 +92,13 @@ export async function POST(request: NextRequest) {
           lastName: t.lastName || null,
           short: t.short || null,
           type: "REGULAR" as const,
+          schoolId,
         })),
       });
     } else {
-      // Find existing teachers, create only new ones
+      // Find existing teachers in this school, create only new ones
       const existing = await prisma.teacher.findMany({
-        where: { name: { in: uniqueTeacherNames } },
+        where: { schoolId, name: { in: uniqueTeacherNames } },
       });
       const existingNames = new Set(existing.map((t) => t.name));
       const newTeachers = uniqueTeachers.filter((t) => !existingNames.has(t.name));
@@ -106,13 +110,14 @@ export async function POST(request: NextRequest) {
             lastName: t.lastName || null,
             short: t.short || null,
             type: "REGULAR" as const,
+            schoolId,
           })),
         });
       }
     }
 
-    // Fetch all teachers to build name -> id map
-    const allTeachers = await prisma.teacher.findMany();
+    // Fetch all teachers for this school to build name -> id map
+    const allTeachers = await prisma.teacher.findMany({ where: { schoolId } });
     const teacherRecords = new Map<string, string>();
     for (const t of allTeachers) teacherRecords.set(t.name, t.id);
 
@@ -123,7 +128,7 @@ export async function POST(request: NextRequest) {
         .filter((id): id is string => !!id);
       if (importedTeacherIds.length > 0) {
         await prisma.timetableEntry.deleteMany({
-          where: { teacherId: { in: importedTeacherIds } },
+          where: { schoolId, teacherId: { in: importedTeacherIds } },
         });
       }
     }
@@ -137,6 +142,7 @@ export async function POST(request: NextRequest) {
       className: string;
       subject: string;
       weekType: WeekType;
+      schoolId: string;
     }[] = [];
 
     for (const entry of entries) {
@@ -155,6 +161,7 @@ export async function POST(request: NextRequest) {
         className: entry.className,
         subject: entry.subject,
         weekType: entry.weekType as WeekType,
+        schoolId,
       });
     }
 
