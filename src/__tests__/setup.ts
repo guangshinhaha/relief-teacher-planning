@@ -13,14 +13,9 @@ export default async function setup() {
     // DB may already exist, that's fine
   }
 
-  // Set env vars for all tests
-  process.env.DATABASE_URL = TEST_DB_URL;
-  process.env.DIRECT_URL = TEST_DB_URL;
-  process.env.NODE_ENV = "test";
-
   // Run migrations against test DB
   execSync("npx prisma migrate deploy", {
     env: { ...process.env, DATABASE_URL: TEST_DB_URL, DIRECT_URL: TEST_DB_URL },
-    stdio: "inherit",
+    stdio: "pipe",
   });
 }
