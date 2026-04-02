@@ -7,20 +7,13 @@ import {
   createSchool,
   createUser,
   createSession,
+  mockSession,
+  mockNoSession,
 } from "../helpers";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
-
-async function mockSession(token: string) {
-  const { cookies } = await import("next/headers");
-  vi.mocked(cookies).mockResolvedValue({
-    get: vi.fn().mockReturnValue({ value: token }),
-    set: vi.fn(),
-    delete: vi.fn(),
-  } as never);
-}
 
 beforeEach(truncateAll);
 

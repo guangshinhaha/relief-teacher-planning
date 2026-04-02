@@ -1,5 +1,24 @@
 import { PrismaClient, UserRole, TeacherType } from "@prisma/client";
 import { generateSessionToken } from "@/lib/auth";
+import { vi } from "vitest";
+
+export async function mockSession(token: string) {
+  const { cookies } = await import("next/headers");
+  vi.mocked(cookies).mockResolvedValue({
+    get: vi.fn().mockReturnValue({ value: token }),
+    set: vi.fn(),
+    delete: vi.fn(),
+  } as never);
+}
+
+export async function mockNoSession() {
+  const { cookies } = await import("next/headers");
+  vi.mocked(cookies).mockResolvedValue({
+    get: vi.fn().mockReturnValue(undefined),
+    set: vi.fn(),
+    delete: vi.fn(),
+  } as never);
+}
 
 const TEST_DB_URL = process.env.DIRECT_URL ?? "postgresql://postgres:postgres@localhost:5433/reliefcher_test";
 

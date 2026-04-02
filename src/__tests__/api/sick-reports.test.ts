@@ -6,20 +6,13 @@ import {
   createUser,
   createSession,
   createTeacher,
+  mockSession,
+  mockNoSession,
 } from "../helpers";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
-
-async function mockSession(token: string) {
-  const { cookies } = await import("next/headers");
-  vi.mocked(cookies).mockResolvedValue({
-    get: vi.fn().mockReturnValue({ value: token }),
-    set: vi.fn(),
-    delete: vi.fn(),
-  } as never);
-}
 
 beforeEach(truncateAll);
 
@@ -104,5 +97,16 @@ describe("POST /api/sick-reports", () => {
     });
     const res = await POST(req as never);
     expect(res.status).toBe(400);
+  });
+
+  it("returns 401 for unauthenticated request", async () => {
+    await mockNoSession();
+    const req = new Request("http://localhost/api/sick-reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teacherId: "fake", startDate: "2026-04-07", numberOfDays: 1 }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(401);
   });
 });

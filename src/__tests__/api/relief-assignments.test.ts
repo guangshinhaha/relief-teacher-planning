@@ -9,20 +9,13 @@ import {
   createPeriod,
   createSickReport,
   createTimetableEntry,
+  mockSession,
+  mockNoSession,
 } from "../helpers";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
-
-async function mockSession(token: string) {
-  const { cookies } = await import("next/headers");
-  vi.mocked(cookies).mockResolvedValue({
-    get: vi.fn().mockReturnValue({ value: token }),
-    set: vi.fn(),
-    delete: vi.fn(),
-  } as never);
-}
 
 beforeEach(truncateAll);
 
@@ -103,6 +96,22 @@ describe("POST /api/relief-assignments", () => {
     });
     const res2 = await POST(req2 as never);
     expect(res2.status).toBe(409);
+  });
+
+  it("returns 401 for unauthenticated request", async () => {
+    await mockNoSession();
+    const req = new Request("http://localhost/api/relief-assignments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sickReportId: "fake",
+        timetableEntryId: "fake",
+        reliefTeacherId: "fake",
+        date: "2026-04-07",
+      }),
+    });
+    const res = await POST(req as never);
+    expect(res.status).toBe(401);
   });
 
   it("returns 201 for valid assignment", async () => {

@@ -1,23 +1,31 @@
 import { prisma } from "@/lib/prisma";
-import { getSchoolId } from "@/lib/auth";
+import { requireSchool } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
+
+function handleAuthError(err: unknown): NextResponse {
+  const message = err instanceof Error ? err.message : "";
+  if (message === "Unauthorized" || message === "No school associated with user") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+}
 
 export async function GET() {
   try {
-    const schoolId = await getSchoolId();
+    const { schoolId } = await requireSchool();
     const teachers = await prisma.teacher.findMany({
       where: { schoolId },
       orderBy: { name: "asc" },
     });
     return NextResponse.json(teachers);
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    return handleAuthError(err);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const schoolId = await getSchoolId();
+    const { schoolId } = await requireSchool();
     const body = await request.json();
     const { name, type } = body;
 
@@ -34,7 +42,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(teacher, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    return handleAuthError(err);
   }
 }

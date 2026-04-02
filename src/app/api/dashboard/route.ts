@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getWeekType } from "@/lib/weekType";
-import { getSchoolId } from "@/lib/auth";
+import { requireSchool } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -15,7 +15,16 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const schoolId = await getSchoolId();
+  let schoolId: string;
+  try {
+    ({ schoolId } = await requireSchool());
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "";
+    if (message === "Unauthorized" || message === "No school associated with user") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 
   const selectedDate = new Date(dateStr + "T00:00:00");
   const jsDay = selectedDate.getDay();

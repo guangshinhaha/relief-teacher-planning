@@ -10,26 +10,28 @@ import {
   createPeriod,
   createSickReport,
   createTimetableEntry,
+  mockSession,
+  mockNoSession,
 } from "../helpers";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
 
-async function mockSession(token: string) {
-  const { cookies } = await import("next/headers");
-  vi.mocked(cookies).mockResolvedValue({
-    get: vi.fn().mockReturnValue({ value: token }),
-    set: vi.fn(),
-    delete: vi.fn(),
-  } as never);
-}
-
 beforeEach(truncateAll);
 
 // 2026-04-07 is a Tuesday (jsDay = 2)
 const TEST_DATE = "2026-04-07";
 const TEST_DAY_OF_WEEK = 2; // Tuesday
+
+describe("GET /api/dashboard (unauthenticated)", () => {
+  it("returns 401 for unauthenticated request", async () => {
+    await mockNoSession();
+    const req = new NextRequest(`http://localhost/api/dashboard?date=2026-04-07`);
+    const res = await GET(req);
+    expect(res.status).toBe(401);
+  });
+});
 
 describe("GET /api/dashboard", () => {
   it("returns 400 without date param", async () => {

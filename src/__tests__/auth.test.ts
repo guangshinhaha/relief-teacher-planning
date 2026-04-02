@@ -1,28 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { generateOtpCode, generateSessionToken, getSession } from "@/lib/auth";
-import { truncateAll, testPrisma, createUser } from "./helpers";
+import { truncateAll, testPrisma, createUser, mockSession, mockNoSession } from "./helpers";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),
 }));
-
-async function mockSession(token: string) {
-  const { cookies } = await import("next/headers");
-  vi.mocked(cookies).mockResolvedValue({
-    get: vi.fn().mockReturnValue({ value: token }),
-    set: vi.fn(),
-    delete: vi.fn(),
-  } as never);
-}
-
-async function mockNoSession() {
-  const { cookies } = await import("next/headers");
-  vi.mocked(cookies).mockResolvedValue({
-    get: vi.fn().mockReturnValue(undefined),
-    set: vi.fn(),
-    delete: vi.fn(),
-  } as never);
-}
 
 describe("generateOtpCode", () => {
   it("returns a 6-digit string", () => {
