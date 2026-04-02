@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getWeekType } from "@/lib/weekType";
+import { getSchoolId } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -13,6 +14,8 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  const schoolId = await getSchoolId();
 
   const selectedDate = new Date(dateStr + "T00:00:00");
   const jsDay = selectedDate.getDay();
@@ -33,9 +36,10 @@ export async function GET(request: NextRequest) {
   const currentWeekType = weekOverride || getWeekType(selectedDate);
   const dateUTC = new Date(dateStr + "T00:00:00.000Z");
 
-  // Fetch sick reports overlapping this date
+  // Fetch sick reports overlapping this date for this school
   const sickReports = await prisma.sickReport.findMany({
     where: {
+      schoolId,
       startDate: { lte: dateUTC },
       endDate: { gte: dateUTC },
     },
@@ -70,6 +74,7 @@ export async function GET(request: NextRequest) {
       sickTeacherIds.length > 0
         ? prisma.timetableEntry.findMany({
             where: {
+              schoolId,
               teacherId: { in: sickTeacherIds },
               dayOfWeek: timetableDayOfWeek,
               weekType: { in: [currentWeekType, "ALL"] },
@@ -78,13 +83,15 @@ export async function GET(request: NextRequest) {
             orderBy: { period: { number: "asc" } },
           })
         : Promise.resolve([]),
-      // All teachers for availability
+      // All teachers for availability (same school)
       prisma.teacher.findMany({
+        where: { schoolId },
         orderBy: { name: "asc" },
       }),
       // All entries for this day + week type (who's busy)
       prisma.timetableEntry.findMany({
         where: {
+          schoolId,
           dayOfWeek: timetableDayOfWeek,
           weekType: { in: [currentWeekType, "ALL"] },
         },
@@ -92,7 +99,7 @@ export async function GET(request: NextRequest) {
       }),
       // Existing relief assignments for this date
       prisma.reliefAssignment.findMany({
-        where: { date: dateUTC },
+        where: { schoolId, date: dateUTC },
         include: {
           timetableEntry: { select: { periodId: true } },
         },

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import { WeekType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,7 +15,12 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const where: { teacherId: string; weekType?: WeekType } = { teacherId };
+  const schoolId = await getSchoolId();
+
+  const where: { teacherId: string; schoolId: string; weekType?: WeekType } = {
+    teacherId,
+    schoolId,
+  };
   if (weekType) {
     where.weekType = weekType;
   }
@@ -29,6 +35,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const schoolId = await getSchoolId();
   const body = await request.json();
   const { teacherId, dayOfWeek, periodId, className, subject, weekType } = body;
 
@@ -43,7 +50,8 @@ export async function POST(request: NextRequest) {
 
   const entry = await prisma.timetableEntry.upsert({
     where: {
-      teacherId_dayOfWeek_periodId_weekType: {
+      schoolId_teacherId_dayOfWeek_periodId_weekType: {
+        schoolId,
         teacherId,
         dayOfWeek,
         periodId,
@@ -61,6 +69,7 @@ export async function POST(request: NextRequest) {
       className: className.trim(),
       subject: subject.trim(),
       weekType: wt,
+      schoolId,
     },
   });
 

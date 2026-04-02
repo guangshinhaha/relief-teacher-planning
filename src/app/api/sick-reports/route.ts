@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  const schoolId = await getSchoolId();
   const body = await request.json();
   const { teacherId, startDate, numberOfDays } = body;
 
@@ -19,8 +21,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const teacher = await prisma.teacher.findUnique({
-    where: { id: teacherId },
+  const teacher = await prisma.teacher.findFirst({
+    where: { id: teacherId, schoolId },
   });
 
   if (!teacher) {
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
       teacherId,
       startDate: start,
       endDate: end,
+      schoolId,
     },
   });
 

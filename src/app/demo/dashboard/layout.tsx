@@ -1,22 +1,20 @@
 import { SchoolProvider } from "@/lib/SchoolContext";
-import DashboardSidebar from "./DashboardSidebar";
-import MobileHeader from "./MobileHeader";
-import BottomTabBar from "./BottomTabBar";
+import DashboardSidebar from "@/app/dashboard/DashboardSidebar";
+import MobileHeader from "@/app/dashboard/MobileHeader";
+import BottomTabBar from "@/app/dashboard/BottomTabBar";
 
-export default function DashboardLayout({
+export default function DemoDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <SchoolProvider basePath="/dashboard" isDemo={false}>
+    <SchoolProvider basePath="/demo/dashboard" isDemo={true}>
       <div className="flex h-[100dvh] overflow-hidden bg-background">
-        {/* Desktop sidebar — hidden on mobile */}
         <div className="hidden md:flex">
           <DashboardSidebar />
         </div>
 
-        {/* Main content */}
         <main className="flex flex-1 flex-col overflow-hidden">
           <MobileHeader />
           <div className="flex-1 overflow-y-auto">
@@ -25,7 +23,6 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Bottom tab bar — mobile only */}
           <BottomTabBar />
         </main>
       </div>

@@ -1,4 +1,4 @@
-import { PrismaClient, TeacherType, WeekType } from "@prisma/client";
+import { PrismaClient, TeacherType, WeekType, UserRole } from "@prisma/client";
 
 const prisma = new PrismaClient({
   datasources: { db: { url: process.env.DIRECT_URL } },
@@ -11,6 +11,38 @@ async function main() {
   await prisma.timetableEntry.deleteMany();
   await prisma.teacher.deleteMany();
   await prisma.period.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.otpCode.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.school.deleteMany();
+
+  // Create demo school
+  const demoSchool = await prisma.school.create({
+    data: { name: "Demo School", slug: "demo" },
+  });
+
+  // Create superadmin user
+  await prisma.user.create({
+    data: {
+      email: "admin@reliefcher.com",
+      name: "Super Admin",
+      role: UserRole.SUPERADMIN,
+      onboardingComplete: true,
+    },
+  });
+
+  // Create demo school admin
+  await prisma.user.create({
+    data: {
+      email: "demo@reliefcher.com",
+      name: "Demo Admin",
+      role: UserRole.SCHOOL_ADMIN,
+      schoolId: demoSchool.id,
+      onboardingComplete: true,
+    },
+  });
+
+  const schoolId = demoSchool.id;
 
   // Create periods (typical school day)
   const periodsData = [
@@ -24,7 +56,7 @@ async function main() {
   ];
   const periods = [];
   for (const p of periodsData) {
-    periods.push(await prisma.period.create({ data: p }));
+    periods.push(await prisma.period.create({ data: { ...p, schoolId } }));
   }
 
   // Create teachers
@@ -40,7 +72,7 @@ async function main() {
   ];
   const teachers = [];
   for (const t of teachersData) {
-    teachers.push(await prisma.teacher.create({ data: t }));
+    teachers.push(await prisma.teacher.create({ data: { ...t, schoolId } }));
   }
 
   const [tan, lim, ahmad, priya, david, sarah] = teachers;
@@ -143,11 +175,14 @@ async function main() {
         className: e.className,
         subject: e.subject,
         weekType: e.weekType,
+        schoolId,
       },
     });
   }
 
   console.log("Seed complete:");
+  console.log(`  1 school (demo)`);
+  console.log(`  2 users (superadmin + demo admin)`);
   console.log(`  ${periods.length} periods`);
   console.log(`  ${teachers.length} teachers`);
   console.log(`  ${entries.length} timetable entries`);

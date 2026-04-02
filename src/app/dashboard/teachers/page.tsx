@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import TeachersClient from "./TeachersClient";
 
 export default async function TeachersPage() {
+  const schoolId = await getSchoolId();
   const teachers = await prisma.teacher.findMany({
+    where: { schoolId },
     orderBy: { createdAt: "desc" },
     include: {
       _count: {

@@ -15,16 +15,16 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/dashboard"
+              href="/demo/dashboard"
               className="rounded-lg px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-foreground"
             >
-              Dashboard
+              Try Demo
             </Link>
             <Link
-              href="/report"
+              href="/login"
               className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-dark hover:shadow-md"
             >
-              Report Sick
+              Sign In
             </Link>
           </div>
         </div>
@@ -54,10 +54,10 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
-              href="/report"
+              href="/login"
               className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-4 text-lg font-semibold text-white shadow-md transition-all hover:bg-accent-dark hover:shadow-lg"
             >
-              Report Sick Leave
+              Get Started
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -73,10 +73,10 @@ export default function LandingPage() {
               </svg>
             </Link>
             <Link
-              href="/dashboard"
+              href="/demo/dashboard"
               className="inline-flex items-center gap-2 rounded-xl border border-card-border bg-card px-8 py-4 text-lg font-semibold text-foreground shadow-sm transition-all hover:border-accent/30 hover:shadow-md"
             >
-              Open Dashboard
+              Try Demo
             </Link>
           </div>
         </div>
@@ -441,10 +441,10 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
-              href="/report"
+              href="/login"
               className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-4 text-lg font-semibold text-white shadow-md transition-all hover:bg-accent-dark hover:shadow-lg"
             >
-              Report Sick Leave
+              Get Started
               <svg
                 className="h-5 w-5"
                 fill="none"
@@ -460,10 +460,10 @@ export default function LandingPage() {
               </svg>
             </Link>
             <Link
-              href="/dashboard"
+              href="/demo/dashboard"
               className="inline-flex items-center gap-2 rounded-xl border border-card-border bg-card px-8 py-4 text-lg font-semibold text-foreground shadow-sm transition-all hover:border-accent/30 hover:shadow-md"
             >
-              KP Dashboard
+              Try Demo
             </Link>
           </div>
         </div>

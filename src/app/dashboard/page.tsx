@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import DashboardContent from "./DashboardContent";
 
 export const dynamic = "force-dynamic";
@@ -9,13 +10,14 @@ export default async function DashboardPage({
   searchParams: Promise<{ date?: string }>;
 }) {
   const { date: dateParam } = await searchParams;
+  const schoolId = await getSchoolId();
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const dateStr = dateParam || todayStr;
 
   const rotationEntry = await prisma.timetableEntry.findFirst({
-    where: { weekType: { in: ["ODD", "EVEN"] } },
+    where: { schoolId, weekType: { in: ["ODD", "EVEN"] } },
     select: { id: true },
   });
   const hasWeekRotation = !!rotationEntry;

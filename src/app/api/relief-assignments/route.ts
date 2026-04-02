@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { getSchoolId } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  const schoolId = await getSchoolId();
   const body = await request.json();
   const { sickReportId, timetableEntryId, reliefTeacherId, date: dateStr } = body;
 
@@ -14,9 +16,9 @@ export async function POST(request: NextRequest) {
 
   const date = new Date(dateStr + "T00:00:00.000Z");
 
-  // Verify the timetable entry exists
-  const timetableEntry = await prisma.timetableEntry.findUnique({
-    where: { id: timetableEntryId },
+  // Verify the timetable entry exists and belongs to this school
+  const timetableEntry = await prisma.timetableEntry.findFirst({
+    where: { id: timetableEntryId, schoolId },
   });
 
   if (!timetableEntry) {
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
       timetableEntryId,
       reliefTeacherId,
       date,
+      schoolId,
     },
   });
 

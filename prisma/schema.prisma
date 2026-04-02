@@ -8,6 +8,8 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ─── Enums ───────────────────────────────────────────────
+
 enum TeacherType {
   REGULAR
   PERMANENT_RELIEF
@@ -19,6 +21,68 @@ enum WeekType {
   EVEN
 }
 
+enum UserRole {
+  SUPERADMIN
+  SCHOOL_ADMIN
+  TEACHER
+}
+
+// ─── Multi-tenancy ──────────────────────────────────────
+
+model School {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  teachers          Teacher[]
+  periods           Period[]
+  timetableEntries  TimetableEntry[]
+  sickReports       SickReport[]
+  reliefAssignments ReliefAssignment[]
+  users             User[]
+}
+
+// ─── Auth ────────────────────────────────────────────────
+
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  name               String?
+  role               UserRole @default(TEACHER)
+  schoolId           String?
+  onboardingComplete Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  school   School?   @relation(fields: [schoolId], references: [id])
+  sessions Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, code])
+}
+
+// ─── Domain models ──────────────────────────────────────
+
 model Teacher {
   id        String      @id @default(cuid())
   name      String
@@ -26,20 +90,28 @@ model Teacher {
   lastName  String?
   short     String?
   type      TeacherType @default(REGULAR)
+  schoolId  String
   createdAt DateTime    @default(now())
 
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   timetableEntries  TimetableEntry[]
   sickReports       SickReport[]
   reliefAssignments ReliefAssignment[]
+
+  @@index([schoolId])
 }
 
 model Period {
   id        String @id @default(cuid())
-  number    Int    @unique
+  number    Int
   startTime String // e.g. "07:30"
   endTime   String // e.g. "08:30"
+  schoolId  String
 
+  school           School           @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   timetableEntries TimetableEntry[]
+
+  @@unique([schoolId, number])
 }
 
 model TimetableEntry {
@@ -50,15 +122,18 @@ model TimetableEntry {
   className String   // e.g. "3A"
   subject   String   // e.g. "Math"
   weekType  WeekType @default(ALL)
+  schoolId  String
 
+  school  School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   period  Period  @relation(fields: [periodId], references: [id], onDelete: Cascade)
 
   reliefAssignments ReliefAssignment[]
 
-  @@unique([teacherId, dayOfWeek, periodId, weekType])
+  @@unique([schoolId, teacherId, dayOfWeek, periodId, weekType])
   @@index([dayOfWeek, weekType])
   @@index([teacherId])
+  @@index([schoolId])
 }
 
 model SickReport {
@@ -66,13 +141,16 @@ model SickReport {
   teacherId String
   startDate DateTime
   endDate   DateTime
+  schoolId  String
   createdAt DateTime @default(now())
 
+  school            School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   teacher           Teacher            @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   reliefAssignments ReliefAssignment[]
 
   @@index([startDate, endDate])
   @@index([teacherId])
+  @@index([schoolId])
 }
 
 model ReliefAssignment {
@@ -81,8 +159,10 @@ model ReliefAssignment {
   timetableEntryId String
   reliefTeacherId  String
   date             DateTime
+  schoolId         String
   createdAt        DateTime @default(now())
 
+  school         School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   sickReport     SickReport     @relation(fields: [sickReportId], references: [id], onDelete: Cascade)
   timetableEntry TimetableEntry @relation(fields: [timetableEntryId], references: [id], onDelete: Cascade)
   reliefTeacher  Teacher        @relation(fields: [reliefTeacherId], references: [id], onDelete: Cascade)
@@ -91,4 +171,5 @@ model ReliefAssignment {
   @@index([date])
   @@index([reliefTeacherId, date])
   @@index([sickReportId])
+  @@index([schoolId])
 }
