@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const start = new Date(startDate + "T00:00:00");
+  const start = new Date(startDate + "T00:00:00.000Z");
   const end = new Date(start);
   end.setDate(end.getDate() + numberOfDays - 1);
 
