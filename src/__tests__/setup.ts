@@ -22,6 +22,5 @@ export default async function setup() {
   execSync("npx prisma migrate deploy", {
     env: { ...process.env, DATABASE_URL: TEST_DB_URL, DIRECT_URL: TEST_DB_URL },
     stdio: "inherit",
-    cwd: "/Users/shin/relief-teacher-planning",
   });
 }
